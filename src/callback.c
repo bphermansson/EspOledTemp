@@ -1,6 +1,4 @@
-int messageReceived(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
-}
+
 
 /*void callback(char* topic, byte* payload, unsigned int length) {
   String stringPayload = "";

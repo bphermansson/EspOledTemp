@@ -1,19 +1,20 @@
 #include <Arduino.h>
 #include "settings.h"
 //#include "callback.h"
-
-
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
+#include <MQTT.h>
+
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
-#include <MQTT.h>
+
 #include <time.h>
 #include <TimeLib.h>
 #include <ArduinoJson.h>
 
-#define appname "EspOledTemp"
+#include "connect.h"
+
+MQTTClient clientMain;
 
 time_t t;
 String totalTime;
@@ -22,18 +23,12 @@ float temp,hum;
 char msg[150];
 const char* mqtt_value_topic = appname;
 
-
 const int capacity = JSON_OBJECT_SIZE(3);
-StaticJsonDocument<capacity> doc;
+//StaticJsonDocument<capacity> doc;
 
 // Declare devices
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
-WiFiClient espClient;
-MQTTClient client;
-
-#include "connect.h"
-
 
 void setup() {
   Serial.begin(115200);
@@ -43,6 +38,8 @@ void setup() {
   Serial.print(appname);
   Serial.println("!");
 
+  connectWifi();
+  connect();
 
   u8g2.begin();
   if (!htu.begin()) {
@@ -99,7 +96,7 @@ void loop() {
   u8g2.sendBuffer();
 
   // Mqtt
-  if (!client.connected()) {
+  if (!clientMain.connected()) {
     connect();
   }
 
@@ -108,3 +105,34 @@ void loop() {
 
 
 }
+
+/*
+void conn() {
+  WiFi.begin(MYSSID, PASSWORD);
+  WiFi.hostname(appname);
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  WiFi.mode(WIFI_STA);
+  Serial.print("Connected to ");
+  Serial.println(MYSSID);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  // Setup Mqtt connection
+  while (!client.connect(appname, MQTT_USERNAME, MQTT_PASSWORD)) {
+    Serial.print(".");
+    delay(1000);
+  }
+  client.subscribe(mqtt_time_topic);
+  Serial.println("Mqtt setup done");
+}
+
+void messageReceived(String &topic, String &payload) {
+  Serial.println("incoming: " + topic + " - " + payload);
+}
+*/
