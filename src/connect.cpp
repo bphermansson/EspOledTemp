@@ -1,32 +1,37 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include "settings.h"
-
 #include <MQTT.h>
-MQTTClient client;
+#include "settings.h"
+#include "mqttrec.h"
+//WiFiClient net;
+
+const char ssid[] = MYSSID;
+const char pass[] = PASSWORD;
 
 void connectWifi() {
   Serial.begin(115200);
-  delay(400);
   Serial.println("Connect to Wifi...");
-  WiFi.begin(MYSSID, PASSWORD);
+  WiFi.persistent(false);  // Do not write Wifi settings to flash
+  WiFi.begin(ssid, pass);
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(1000);
   }
-
+  Serial.print("Connected to Wifi with IP ");
+  Serial.println(WiFi.localIP());
 }
-
-void connect() {
-  Serial.println("Connect to Mqtt broker...");
-  while (!client.connect("appname", MQTT_USERNAME, MQTT_PASSWORD)) {
-    Serial.print(".");
-    delay(1000);
-  }
-
+/*
+int connectMqtt(MQTTClient client) {
+  if (!client.connected()) {
+    Serial.println("Connect to Mqtt broker...");
+    client.begin(mqtt_server, net);
+    while (!client.connect("appname", mqttuser, mqttpass)) {
+      Serial.print(".");
+      delay(1000);
+    }
   Serial.println("Connected!");
-
-  client.subscribe(mqtt_time_topic);
-  // client.unsubscribe("/hello");
+  }
+  return(0);
 }
+*/
