@@ -1,3 +1,34 @@
+#include "time.h"
+#include <Arduino.h>
+#include "settings.h"
+
+char buffer[80];
+
+void setup_NTP()
+{
+  time_t rawtime;
+  struct tm * timeinfo;
+
+  configTime(GMTOFFSET, DAYLIGHTOFFSET, NTPSERVERNAME);
+
+  Serial.println("\nWaiting for time");
+  while (!time(nullptr))
+  {
+    Serial.print(".");
+    delay(1000);
+  }
+  delay(1000);
+
+  Serial.println("Time set, moving on");
+
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+
+  strftime (buffer,80," %d %B %Y %H:%M:%S ",timeinfo);
+  Serial.println(buffer);
+}
+
+/*
 #include <ESP8266WiFi.h>
 #include <time.h>                       // time() ctime()
 #include <sys/time.h>                   // struct timeval
@@ -10,7 +41,7 @@
 #define TZ_SEC      ((TZ)*3600)
 #define DST_SEC     ((DST_MN)*60)
 #define TIME_ZONE   localTZ
-#define NTP_SERVER  ntpServerName
+//#define NTP_SERVER  ntpServerName
 
 timeval cbtime;			// time set in callback
 bool cbtime_set = false;
@@ -36,3 +67,4 @@ void setup_NTP()
     tzset();
     configTime(0, 0, NTP_SERVER);
 }
+*/
