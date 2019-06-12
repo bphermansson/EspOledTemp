@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "settings.h"
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
@@ -11,6 +12,7 @@
 
 MQTTClient client;
 WiFiClient net;
+ESP8266WebServer server(80);
 
 String date = "----";
 float temp,hum;
@@ -24,6 +26,8 @@ const char mqttpass[] = MQTT_PASSWORD;
 String subTopic;
 
 void mqttPublish(String subTopic, String data);
+void handleRoot();
+void handleNotFound();
 
 // Declare devices
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
@@ -55,11 +59,14 @@ void setup() {
   }
 
   client.begin(MQTT_SERVER, net);
-
+  server.on("/", handleRoot);
+  server.begin();
+  Serial.println("HTTP server started");
 }
 
 void loop() {
     client.loop();
+    server.handleClient();
     delay(10);  // <- fixes some issues with WiFi stability
     counter = millis();
     if (counter-oldcounter>interval){
@@ -133,4 +140,7 @@ void mqttPublish(String subTopic, String data) {
   String sTopic = MQTT_PUB_TOPIC+subTopic;
   const char *totTopic = sTopic.c_str();
   client.publish(totTopic, data);
+}
+void handleRoot() {
+  server.send(200, "text/plain", "Hello world!");   
 }
