@@ -1,4 +1,3 @@
-//#include <MQTT.h>
 #include <ArduinoJson.h>
 
 String createJson(String appname, char *totTime, char *realDate, char *ctemp, char *chum, long uptime) {

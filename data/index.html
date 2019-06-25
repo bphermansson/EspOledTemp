@@ -13,13 +13,13 @@
     <p><button class="data" id="temp">NA</button></p>
     <span id="temp">NA</span>
     <p><button class="data data2">OFF</button></p>-->
-  <!--
+<!--
   <div>
       Data : <span id="data">NA</span>
   </div>
-  -->
+-->
   <div id="values">
-  
+
     <b><span id="timekey"></span></b>
       <br />
       <span id="time"></span>
@@ -57,21 +57,21 @@ function getData() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      //document.getElementById("data").innerHTML = this.responseText;
-      
+      document.getElementById("data").innerHTML = this.responseText;
+
       let obj = JSON.parse(this.responseText.toString());
       var keys = Object.keys(obj);
 
       document.getElementById("appname").innerHTML = obj.appname;
-      
+
       document.getElementById("timekey").innerHTML = capitalizeFirstLetter(keys[ 1 ]);
       document.getElementById("time").innerHTML = obj.time;
-      
+
       document.getElementById("datekey").innerHTML = capitalizeFirstLetter(keys[ 2 ]);
       document.getElementById("date").innerHTML = obj.date;
 
       document.getElementById("tempkey").innerHTML = capitalizeFirstLetter(keys[ 3 ]);
-      document.getElementById("temperature").innerHTML = obj.temperature;
+      document.getElementById("temperature").innerHTML = obj.temp;
 
       document.getElementById("humkey").innerHTML = capitalizeFirstLetter(keys[ 4 ]);
       document.getElementById("humidity").innerHTML = obj.humidity;

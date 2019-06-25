@@ -23,21 +23,20 @@ String date = "----";
 float temp,hum;
 time_t now;
 int counter;
-int oldcounter = 0;
+int oldcounter = 10000;
 bool sensorPres = true;
 const int interval = 15000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
 char appname[] = APPNAME;
 
-String subTopic, htmldata;
+String subTopic, htmldata, jsondata;
 char totTime[20];
 char realDate[20];
 char ctemp[8];
 char chum[5];
 
 void mqttPublish(String subTopic, String data);
-//String processor(const String& var);
 
 // Declare devices
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
@@ -75,19 +74,16 @@ void setup() {
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    //request->send(SPIFFS, "/index.html", String(), false, processor);
     request->send(SPIFFS, "/index.html", String(), false);
-
   });
   server.on("/json.html", HTTP_GET, [](AsyncWebServerRequest *request){
-    //request->send(SPIFFS, "/json.html", String(), false, htmldata);
   });
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/style.css", "text/css");
   });
   server.on("/readdata", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", htmldata);
+    request->send(200, "text/plain", jsondata);
   });
   server.begin();
 }
@@ -159,26 +155,11 @@ void loop() {
 
       // Create json-object from all data
       long int timenow = millis();
-      String jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
-        Serial.print ("jsondata: ");
-        Serial.println (jsondata);
-      /*
-      const size_t capacity = JSON_OBJECT_SIZE(8);
-      DynamicJsonDocument doc(capacity);
-
-      doc["appname"] = APPNAME;
-      doc["time"] = totTime;
-      doc["date"] = realDate;
-      doc["temperature"] = ctemp;
-      doc["humidity"] = chum;
-      doc["uptime"] = millis();
-
-      htmldata="";
-      serializeJson(doc, Serial);
-      serializeJson(doc, htmldata);
-*/
-    oldcounter=counter;
-    Serial.println(counter);
+      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
+      Serial.print ("jsondata: ");
+      Serial.println (jsondata);
+      oldcounter=counter;
+      Serial.println(counter);
   }
 }
 
