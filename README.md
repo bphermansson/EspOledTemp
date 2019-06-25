@@ -3,4 +3,4 @@ The base for this build is a NodeMCU, a Soc based on ESP8266. It has a sensor fo
 The values are also presented via a dynamic webpage where you can see the values in near realtime.
 
 
-<img>https://github.com/bphermansson/EspOledTemp/blob/dev/screenshot.png</img>
+![Screenshot](https://github.com/bphermansson/EspOledTemp/blob/dev/screenshot.png)
