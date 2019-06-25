@@ -7,12 +7,13 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
-#include <ArduinoJson.h>
 #include <MQTT.h>
 #include "connect.h"
 #include "ntp.h"
- 
-String processor(const String& var);
+#include "createJson.h"
+#include <ArduinoJson.h>
+
+// Check mqtt code
 
 MQTTClient client;
 WiFiClient net;
@@ -27,6 +28,7 @@ bool sensorPres = true;
 const int interval = 15000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
+char appname[] = APPNAME;
 
 String subTopic, htmldata;
 char totTime[20];
@@ -35,6 +37,7 @@ char ctemp[8];
 char chum[5];
 
 void mqttPublish(String subTopic, String data);
+//String processor(const String& var);
 
 // Declare devices
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
@@ -77,7 +80,7 @@ void setup() {
 
   });
   server.on("/json.html", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/json.html", String(), false, processor);
+    //request->send(SPIFFS, "/json.html", String(), false, htmldata);
   });
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -155,6 +158,11 @@ void loop() {
       }
 
       // Create json-object from all data
+      long int timenow = millis();
+      String jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
+        Serial.print ("jsondata: ");
+        Serial.println (jsondata);
+      /*
       const size_t capacity = JSON_OBJECT_SIZE(8);
       DynamicJsonDocument doc(capacity);
 
@@ -168,7 +176,7 @@ void loop() {
       htmldata="";
       serializeJson(doc, Serial);
       serializeJson(doc, htmldata);
-
+*/
     oldcounter=counter;
     Serial.println(counter);
   }
@@ -178,21 +186,4 @@ void mqttPublish(String subTopic, String data) {
   String sTopic = MQTT_PUB_TOPIC+subTopic;
   const char *totTopic = sTopic.c_str();
   client.publish(totTopic, data);
-}
-String processor(const String& var){
-  Serial.print("var: ");
-  Serial.println(var);
-  const size_t capacity = JSON_OBJECT_SIZE(7);
-  DynamicJsonDocument doc(capacity);
-
-  doc["appname"] = APPNAME;
-  doc["time"] = totTime;
-  doc["date"] = realDate;
-  doc["temp"] = ctemp;
-  doc["humidity"] = chum;
-
-  serializeJson(doc, Serial);
-  String output;
-  serializeJson(doc, output);
-  return output;
 }
