@@ -7,3 +7,5 @@ include/settings.h
 .vscode
 data/.nfs*
 src/.nfs*
+oldFiles
+.nfs*

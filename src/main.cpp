@@ -1,29 +1,39 @@
+
 #include <Arduino.h>
 #include "settings.h"
 #include <ESP8266WiFi.h>
-#include <MQTT.h> // MQTT by Joel Gaehwiler
+#include "ESPAsyncWebServer.h"
+#include "FS.h"
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
 #include <ArduinoJson.h>
+#include <MQTT.h>
+#include "connect.h"
+#include "ntp.h"
+#include "createJson.h"
+#include "mqttPublish.h"
 
 MQTTClient client;
 WiFiClient net;
+AsyncWebServer server(80);
 
-#include "connect.h"
-#include "ntp.h"
-#include "mqttPublish.h"
-
-//String date = "----";
-char realDate[20];
+String date = "----";
 float temp,hum;
 time_t now;
-
 int counter;
-int oldcounter = 0;
+int oldcounter = 10000;
+bool sensorPres = true;
 const int interval = 15000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
+char appname[] = APPNAME;
+
+String subTopic, htmldata, jsondata;
+char totTime[20];
+char realDate[20];
+char ctemp[8];
+char chum[5];
 
 // Declare devices
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
@@ -32,9 +42,10 @@ Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 void setup() {
   // Init display
   u8g2.begin();
+  delay(200);
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_crox3h_tr);
-  u8g2.drawStr( 40, 20, APPNAME);
+  u8g2.drawStr( 20, 20, "EspOledTemp");
 
   Serial.begin(115200);
   Serial.println();
@@ -44,6 +55,8 @@ void setup() {
   Serial.print(APPNAME);
   Serial.println("!");
 
+  SPIFFS.begin();
+
   connectWifi();
 
   setup_NTP();
@@ -51,70 +64,98 @@ void setup() {
   // Init sensor
   if (!htu.begin()) {
     Serial.println("Couldn't find sensor!");
-    // This will crash the poor Esp...
-    while (1);
+    sensorPres = false;
   }
+
+  client.begin(MQTT_SERVER, net);
+
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.html", String(), false);
+  });
+  server.on("/json.html", HTTP_GET, [](AsyncWebServerRequest *request){
+  });
+  // Route to load style.css file
+  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/style.css", "text/css");
+  });
+  server.on("/readdata", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", jsondata);
+  });
+  server.begin();
 }
 
 void loop() {
     client.loop();
+    delay(10);  // <- fixes some issues with WiFi stability
     counter = millis();
     if (counter-oldcounter>interval){
-      u8g2.clearBuffer();
+      // Mqtt
+      if (!client.connected()) {
+        Serial.println("Connect to Mqtt broker...");
+        client.begin(MQTT_SERVER, net);
+        while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
+          Serial.print(".");
+          delay(1000);
+        }
+        Serial.println("Connected!");
+      }
+
       struct tm * timeinfo;
       time(&now);
       timeinfo = localtime(&now);
-      char totTime[20];
       sprintf_P(totTime, (PGM_P)F("%02d:%02d"), timeinfo->tm_hour, timeinfo->tm_min);
 
       int realyear = timeinfo->tm_year + 1900;
       int realmon = timeinfo->tm_mon + 1;
       sprintf_P(realDate, (PGM_P)F("%04d-%02d-%02d"), realyear, realmon, timeinfo->tm_mday);
 
-      Serial.print("totTime: ");
+      Serial.print("Time: ");
       Serial.println(totTime);
-      Serial.print("realDate: ");
+      Serial.print("Date: ");
       Serial.println(realDate);
 
+      u8g2.clearBuffer();
       u8g2.setFont(u8g2_font_crox3h_tr);
       u8g2.drawStr( 20, 20, realDate);
-
       u8g2.setFont(u8g2_font_logisoso16_tn);
       u8g2.drawStr( 40, 41, totTime);
 
-    temp=htu.readTemperature();
-    char ctemp[8];
-    dtostrf(temp, 5, 1, ctemp);
-    strcat(ctemp, "C");
+      mqttPublish("/date", realDate);
+      mqttPublish("/time", totTime);
 
-    Serial.print("Temp: ");
-    Serial.println(ctemp);
+      if (sensorPres) {
+        temp=htu.readTemperature();
+        String stemp = String(temp);  // Dummy to easily measure variable length
+        dtostrf(temp, stemp.length()-1, 1, ctemp);
+        strcat(ctemp, "C");
+        mqttPublish("/temp", ctemp);
 
-    u8g2.setFont(u8g2_font_crox3h_tr);
-    u8g2.drawStr( 10, 60, ctemp);
+        hum=htu.readHumidity();
+        dtostrf(hum, 2, 0, chum);
+        strcat(chum, "%");
+        mqttPublish("/humidity", chum);
 
-    hum=htu.readHumidity();
-    char chum[5];
-    dtostrf(hum, 5, 0, chum);
-    strcat(chum, "%");
-    Serial.print("Humidity: ");
-    Serial.println(chum);
-    u8g2.drawStr( 65, 60, chum);
-    u8g2.sendBuffer();
+        Serial.print("Temp: ");
+        Serial.println(ctemp);
+        u8g2.setFont(u8g2_font_crox3h_tr);
+        u8g2.drawStr( 10, 60, ctemp);
 
-    // Mqtt
-    if (!client.connected()) {
-      Serial.println("Connect to Mqtt broker...");
-      client.begin(MQTT_SERVER, net);
-      while (!client.connect(APPNAME, mqttuser, mqttpass)) {
-        Serial.print(".");
-        delay(1000);
+        Serial.print("Humidity: ");
+        Serial.println(chum);
+        u8g2.drawStr( 65, 60, chum);
+        u8g2.sendBuffer();
       }
-    Serial.println("Connected!");
-    }
+      else {
+        Serial.println ("No temp/humidity sensor attached");
+      }
 
-    oldcounter=counter;
-    //counter = 0;
-    Serial.println(counter);
+      // Create json-object from all data
+      long int timenow = millis();
+      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
+      Serial.print ("jsondata: ");
+      Serial.println (jsondata);
+      oldcounter=counter;
+      Serial.println(counter);
   }
 }
