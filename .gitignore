@@ -3,5 +3,9 @@
 .piolibdeps
 .clang_complete
 .gcc-flags.json
-.vscode
 include/settings.h
+.vscode
+data/.nfs*
+src/.nfs*
+oldFiles
+.nfs*
