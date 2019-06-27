@@ -1,2 +1,4 @@
 - Send measured values via Mqtt. OK
 - Create README. OK
+- Enable OTA.
+-Add settings file instructions to readme

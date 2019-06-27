@@ -117,7 +117,7 @@ void loop() {
 
       u8g2.clearBuffer();
       u8g2.setFont(u8g2_font_crox3h_tr);
-      u8g2.drawStr( 20, 20, realDate);
+      u8g2.drawStr( 21, 13, realDate);  // x, y
       u8g2.setFont(u8g2_font_logisoso16_tn);
       u8g2.drawStr( 40, 41, totTime);
 
@@ -139,11 +139,11 @@ void loop() {
         Serial.print("Temp: ");
         Serial.println(ctemp);
         u8g2.setFont(u8g2_font_crox3h_tr);
-        u8g2.drawStr( 10, 60, ctemp);
+        u8g2.drawStr( 20, 60, ctemp);
 
         Serial.print("Humidity: ");
         Serial.println(chum);
-        u8g2.drawStr( 65, 60, chum);
+        u8g2.drawStr( 70, 60, chum);
         u8g2.sendBuffer();
       }
       else {

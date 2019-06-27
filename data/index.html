@@ -10,7 +10,6 @@
   <div class="container">
     <h1><span id="appname"></span></h1>
   <div id="values">
-
     <b><span id="timekey"></span></b>
       <br />
       <span id="time"></span>
@@ -31,6 +30,10 @@
       <b><span id="uptimekey"></span></b><br />
       <span id="uptime"></span>
   </div>
+  <div id="data">
+    <b>Raw data</b>
+
+  </div>
 </div>
 <a href="https://github.com/bphermansson/EspOledTemp">https://github.com/bphermansson/EspOledTemp</a>
 
@@ -44,7 +47,7 @@ function getData() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("data").innerHTML = this.responseText;
+      document.getElementById("data").innerHTML = "Raw data: <br> " + this.responseText;
 
       let obj = JSON.parse(this.responseText.toString());
       var keys = Object.keys(obj);
