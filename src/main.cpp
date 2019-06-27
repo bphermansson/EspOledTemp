@@ -8,11 +8,13 @@
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
 #include <ArduinoJson.h>
+#include <ArduinoOTA.h>
 #include <MQTT.h>
 #include "connect.h"
 #include "ntp.h"
 #include "createJson.h"
 #include "mqttPublish.h"
+#include "ota.h"
 
 MQTTClient client;
 WiFiClient net;
@@ -69,6 +71,8 @@ void setup() {
 
   client.begin(MQTT_SERVER, net);
 
+  enableOTA();
+
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(SPIFFS, "/index.html", String(), false);
@@ -86,6 +90,7 @@ void setup() {
 }
 
 void loop() {
+    ArduinoOTA.handle();
     client.loop();
     delay(10);  // <- fixes some issues with WiFi stability
     counter = millis();
@@ -143,7 +148,7 @@ void loop() {
 
         Serial.print("Humidity: ");
         Serial.println(chum);
-        u8g2.drawStr( 70, 60, chum);
+        u8g2.drawStr( 74, 60, chum);
         u8g2.sendBuffer();
       }
       else {
