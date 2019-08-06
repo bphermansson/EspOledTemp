@@ -1,11 +1,14 @@
-.pio
+.pio*
 .pioenvs
 .piolibdeps
 .clang_complete
 .gcc-flags.json
 include/settings.h
 .vscode
+.vscode/*
 data/.nfs*
 src/.nfs*
-oldFiles
+/oldFiles/
 .nfs*
+.travis*
+*.code-workspace

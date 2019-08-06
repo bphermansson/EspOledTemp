@@ -23,11 +23,22 @@ p.headline{
   position: relative;
   text-align:center;
 }
-
+#time, #date, #temperature, #humidity, #uptime {
+  color: #fff;
+}
 #values {
   box-shadow: 5px 5px 15px 5px #631504;
+  background: #6086dc;
   padding: 5px;
   width: 120px;
+  margin: 26px;
+  font-size: 1.4vw;
+  display:inline-block;
+  }
+#data {
+  box-shadow: 5px 5px 15px 5px #631504;
+  padding: 5px;
+
   margin: 26px;
   font-size: 1.4vw;
   display:inline-block;

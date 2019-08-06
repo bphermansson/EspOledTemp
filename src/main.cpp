@@ -3,16 +3,18 @@
 #include "settings.h"
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"
-#include "FS.h"
+//#include "FS.h"
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
 #include <ArduinoJson.h>
+#include <ArduinoOTA.h>
 #include <MQTT.h>
 #include "connect.h"
 #include "ntp.h"
 #include "createJson.h"
 #include "mqttPublish.h"
+#include "ota.h"
 
 MQTTClient client;
 WiFiClient net;
@@ -55,7 +57,7 @@ void setup() {
   Serial.print(APPNAME);
   Serial.println("!");
 
-  SPIFFS.begin();
+  //SPIFFS.begin();
 
   connectWifi();
 
@@ -68,6 +70,8 @@ void setup() {
   }
 
   client.begin(MQTT_SERVER, net);
+
+  enableOTA();
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -86,6 +90,7 @@ void setup() {
 }
 
 void loop() {
+    ArduinoOTA.handle();
     client.loop();
     delay(10);  // <- fixes some issues with WiFi stability
     counter = millis();
@@ -117,33 +122,33 @@ void loop() {
 
       u8g2.clearBuffer();
       u8g2.setFont(u8g2_font_crox3h_tr);
-      u8g2.drawStr( 20, 20, realDate);
+      u8g2.drawStr( 21, 13, realDate);  // x, y
       u8g2.setFont(u8g2_font_logisoso16_tn);
       u8g2.drawStr( 40, 41, totTime);
 
-      mqttPublish("/date", realDate);
-      mqttPublish("/time", totTime);
+      mqttPublish((char *)"/date", realDate);
+      mqttPublish((char *)"/time", totTime);
 
       if (sensorPres) {
         temp=htu.readTemperature();
         String stemp = String(temp);  // Dummy to easily measure variable length
         dtostrf(temp, stemp.length()-1, 1, ctemp);
         strcat(ctemp, "C");
-        mqttPublish("/temp", ctemp);
+        mqttPublish((char *)"/temp", ctemp);
 
         hum=htu.readHumidity();
         dtostrf(hum, 2, 0, chum);
         strcat(chum, "%");
-        mqttPublish("/humidity", chum);
+        mqttPublish((char *)"/humidity", chum);
 
         Serial.print("Temp: ");
         Serial.println(ctemp);
         u8g2.setFont(u8g2_font_crox3h_tr);
-        u8g2.drawStr( 10, 60, ctemp);
+        u8g2.drawStr( 20, 60, ctemp);
 
         Serial.print("Humidity: ");
         Serial.println(chum);
-        u8g2.drawStr( 65, 60, chum);
+        u8g2.drawStr( 74, 60, chum);
         u8g2.sendBuffer();
       }
       else {

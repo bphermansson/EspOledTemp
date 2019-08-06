@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"PATH": "/home/patrik/.platformio/penv/bin:/home/patrik/.platformio/penv:/home/patrik/.local/bin:/home/patrik/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/media/1TB2017/Program/balena-cli/:/media/1TB2017/Android/Sdk//emulator:/media/1TB2017/Android/Sdk//tools:/media/1TB2017/Android/Sdk//tools/bin:/media/1TB2017/Android/Sdk//platform-tools",
+			"PLATFORMIO_CALLER": "vscode"
+		}
+	}
+}
