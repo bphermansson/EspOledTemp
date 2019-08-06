@@ -130,6 +130,17 @@
             "cStandard": "c99",
             "cppStandard": "c++11",
             "compilerPath": "\"/home/patrik/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-gcc\" -mlongcalls -mtext-section-literals"
+        },
+        {
+            "name": "L",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 4
