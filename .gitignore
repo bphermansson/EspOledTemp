@@ -1,4 +1,4 @@
-.pio
+.pio*
 .pioenvs
 .piolibdeps
 .clang_complete
@@ -10,3 +10,5 @@ data/.nfs*
 src/.nfs*
 /oldFiles/
 .nfs*
+.travis*
+*.code-workspace
