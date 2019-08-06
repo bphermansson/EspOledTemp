@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "/home/patrik/Documents/PlatformIO/Projects/EspOledTemp"
+		},
+		{
+			"name": "EspOledTemp",
+			"path": "/media/nasFiler/Programmering/platformio/EspOledTemp"
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"PATH": "/home/patrik/.platformio/penv/bin:/home/patrik/.platformio/penv:/usr/share/Modules/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/home/patrik/.local/bin:/home/patrik/bin:/home/patrik/.local/bin:/home/patrik/bin:/home/patrik/Android/flutter/bin:/home/patrik/Android/Sdk//tools:/home/patrik/Android/Sdk//platform-tools:/home/patrik/Android/Sdk//tools/bin:/home/patrik/Android/Sdk//platform-tools:/home/patrik/Android/Sdk//emulator:/home/patrik/Android/Sdk//build-tools:/home/patrik/.gradle/wrapper/dists/gradle-4.10.2-all/9fahxiiecdb76a5g3aw9oi8rv/gradle-4.10.2/bin/",
+			"PLATFORMIO_CALLER": "vscode"
+		}
+	}
+}

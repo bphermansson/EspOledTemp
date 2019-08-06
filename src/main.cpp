@@ -3,7 +3,7 @@
 #include "settings.h"
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"
-#include "FS.h"
+//#include "FS.h"
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
@@ -57,7 +57,7 @@ void setup() {
   Serial.print(APPNAME);
   Serial.println("!");
 
-  SPIFFS.begin();
+  //SPIFFS.begin();
 
   connectWifi();
 
@@ -126,20 +126,20 @@ void loop() {
       u8g2.setFont(u8g2_font_logisoso16_tn);
       u8g2.drawStr( 40, 41, totTime);
 
-      mqttPublish("/date", realDate);
-      mqttPublish("/time", totTime);
+      mqttPublish((char *)"/date", realDate);
+      mqttPublish((char *)"/time", totTime);
 
       if (sensorPres) {
         temp=htu.readTemperature();
         String stemp = String(temp);  // Dummy to easily measure variable length
         dtostrf(temp, stemp.length()-1, 1, ctemp);
         strcat(ctemp, "C");
-        mqttPublish("/temp", ctemp);
+        mqttPublish((char *)"/temp", ctemp);
 
         hum=htu.readHumidity();
         dtostrf(hum, 2, 0, chum);
         strcat(chum, "%");
-        mqttPublish("/humidity", chum);
+        mqttPublish((char *)"/humidity", chum);
 
         Serial.print("Temp: ");
         Serial.println(ctemp);
