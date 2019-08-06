@@ -12,7 +12,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "/home/patrik/Documents/PlatformIO/Projects/EspOledTemp/.pioenvs/d1/firmware.elf",
+            "executable": "/media/nasFilerCifs/Programmering/platformio/EspOledTemp/.pio/build/d1/firmware.elf",
             "toolchainBinDir": "/home/patrik/.platformio/packages/toolchain-xtensa/bin",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -24,7 +24,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "/home/patrik/Documents/PlatformIO/Projects/EspOledTemp/.pioenvs/d1/firmware.elf",
+            "executable": "/media/nasFilerCifs/Programmering/platformio/EspOledTemp/.pio/build/d1/firmware.elf",
             "toolchainBinDir": "/home/patrik/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart"
         }
