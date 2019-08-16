@@ -1,20 +1,13 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
-#include <MQTT.h>
 #include "settings.h"
+#include <MQTT.h>
 
-void mqttPublish(MQTTClient client, float temp, float hum) {
-  String mqtt_pub_topic = MQTT_PUB_TOPIC;
-  const size_t capacity = JSON_ARRAY_SIZE(2) + JSON_OBJECT_SIZE(3);
-  DynamicJsonDocument values(capacity);
-  values["temp"] = String(temp);
-  values["humidity"] = hum;
+extern MQTTClient client;
 
-  char output[128];
-  serializeJson(values, output);
-  Serial.print("Publish to Mqtt broker, subject: ");
-  Serial.println(mqtt_pub_topic);
-  Serial.println(output);
-  client.publish(mqtt_pub_topic, output);
-
+String mqttPublish(char *subTopic, char *data) {
+    char totTopic[30];
+    const char *cTopic = MQTT_PUB_TOPIC;
+    strcpy(totTopic,cTopic);
+    strcat(totTopic,subTopic);
+    client.publish(totTopic, data);
 }

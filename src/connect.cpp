@@ -2,7 +2,6 @@
 #include <ESP8266WiFi.h>
 #include <MQTT.h>
 #include "settings.h"
-#include "mqttrec.h"
 
 const char ssid[] = MYSSID;
 const char pass[] = PASSWORD;
@@ -15,7 +14,7 @@ void connectWifi() {
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
-    delay(1000);
+    delay(500);
   }
   Serial.print("Connected to Wifi with IP ");
   Serial.println(WiFi.localIP());
