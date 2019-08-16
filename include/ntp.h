@@ -1,1 +1,1 @@
-void setup_NTP();
+bool setup_NTP();

@@ -1,4 +1,5 @@
 .pio
+.pio*
 .pioenvs
 .piolibdeps
 .clang_complete
@@ -7,3 +8,5 @@ include/settings.h
 .vscode
 data/.nfs*
 src/.nfs*
+.nfs*
+.travis*

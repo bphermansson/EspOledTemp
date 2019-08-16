@@ -34,7 +34,8 @@ void setup() {
   u8g2.begin();
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_crox3h_tr);
-  u8g2.drawStr( 40, 20, APPNAME);
+  u8g2.drawStr( 10, 40, APPNAME);
+  u8g2.sendBuffer();  // Without this the message won't display
 
   Serial.begin(115200);
   Serial.println();
@@ -44,15 +45,37 @@ void setup() {
   Serial.print(APPNAME);
   Serial.println("!");
 
+  delay(2000);
+
+  u8g2.clearBuffer();
+  u8g2.drawStr( 10, 40, "Connecting...");
+  u8g2.sendBuffer();  // Without this the message won't display
+
   connectWifi();
 
-  setup_NTP();
+  delay(1000);
 
+  while (!setup_NTP())
+  {}
+
+  u8g2.setFont( u8g2_font_crox1c_tf);     // Set Font
   // Init sensor
   if (!htu.begin()) {
-    Serial.println("Couldn't find sensor!");
-    // This will crash the poor Esp...
-    while (1);
+  //if (htu.begin()) {
+    char error[25];
+    strcpy (error, "Sensor error");
+    Serial.println(error);
+    u8g2.clearBuffer();
+    u8g2.drawStr( 10, 40, error);
+    u8g2.sendBuffer();
+    delay(5000);
+    while (1){};
+  }
+  else {
+    u8g2.clearBuffer();
+    u8g2.drawStr( 10, 40, "Setup done");
+    u8g2.sendBuffer();  // Without this the message won't display
+    delay(1000);
   }
 }
 
@@ -71,9 +94,11 @@ void loop() {
       int realmon = timeinfo->tm_mon + 1;
       sprintf_P(realDate, (PGM_P)F("%04d-%02d-%02d"), realyear, realmon, timeinfo->tm_mday);
 
-      Serial.print("totTime: ");
+      Serial.println("----------------");
+
+      Serial.print("Time: ");
       Serial.println(totTime);
-      Serial.print("realDate: ");
+      Serial.print("Date: ");
       Serial.println(realDate);
 
       u8g2.setFont(u8g2_font_crox3h_tr);
@@ -114,7 +139,7 @@ void loop() {
     }
 
     oldcounter=counter;
-    //counter = 0;
+    Serial.print("Millis: ");
     Serial.println(counter);
   }
 }
