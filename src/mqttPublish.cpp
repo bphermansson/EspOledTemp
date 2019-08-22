@@ -3,11 +3,14 @@
 #include <MQTT.h>
 
 extern MQTTClient client;
+char totTopic[50];
+const char *cTopic = MQTT_PUB_TOPIC;
 
-String mqttPublish(char *subTopic, char *data) {
-    char totTopic[30];
-    const char *cTopic = MQTT_PUB_TOPIC;
-    strcpy(totTopic,cTopic);
-    strcat(totTopic,subTopic);
-    client.publish(totTopic, data);
+//void mqttPublish(char *subTopic, char *data) {
+void mqttPublish(String subTopic, String data) {
+    //strcpy(totTopic,cTopic);
+    //strcat(totTopic,subTopic);
+    Serial.println("mqtt");
+    //client.publish(totTopic, data);
+    //client.publish(MQTT_PUB_TOPIC, data);
 }

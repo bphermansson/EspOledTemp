@@ -20,18 +20,21 @@ MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
 
+void mqttconnect();
+
 String date = "----";
 float temp,hum;
 time_t now;
 int counter;
-int oldcounter = 10000;
+int oldcounter = 15000;
 bool sensorPres = true;
 const int interval = 15000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
 char appname[] = APPNAME;
+String topic = MQTT_PUB_TOPIC;
 
-String subTopic, htmldata, jsondata;
+String tempTopic, htmldata, jsondata;
 char totTime[20];
 char realDate[20];
 char ctemp[8];
@@ -58,7 +61,7 @@ void setup() {
   Serial.print(APPNAME);
   Serial.println("!");
 
-  delay(2000);
+  delay(1000);
 
   u8g2.clearBuffer();
   u8g2.drawStr( 10, 40, "Connecting...");
@@ -68,8 +71,9 @@ void setup() {
 
   delay(1000);
 
-  while (!setup_NTP())
-  {}
+  //while (!setup_NTP())
+  //{}
+  setup_NTP();
 
   u8g2.setFont( u8g2_font_crox1c_tf);     // Set Font
   // Init sensor
@@ -86,12 +90,27 @@ void setup() {
   }
   else {
     u8g2.clearBuffer();
-    u8g2.drawStr( 10, 40, "Setup done");
+    u8g2.drawStr( 10, 40, "Sensor ok");
     u8g2.sendBuffer();  // Without this the message won't display
     delay(1000);
   }
 
   client.begin(MQTT_SERVER, net);
+  Serial.println("Connecting to MQTT broker");
+  while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println("Connected!");
+  Serial.print("Publishing to: ");
+  Serial.println(MQTT_PUB_TOPIC);
+
+  if (!client.connected()) {
+    mqttconnect();
+  }
+  String welmess = "Welcome to ";
+  welmess += APPNAME;
+  client.publish(MQTT_PUB_TOPIC, welmess);
 
   enableOTA();
 
@@ -109,35 +128,33 @@ void setup() {
     request->send(200, "text/plain", jsondata);
   });
   server.begin();
+
+  char smess[15];
+  strcpy(smess, "Setup done");
+  Serial.println(smess);
+  u8g2.clearBuffer();
+  u8g2.drawStr( 10, 40, smess);
+  u8g2.sendBuffer();  // Without this the message won't display
+  delay(1000);
 }
 
 void loop() {
     ArduinoOTA.handle();
     client.loop();
     delay(10);  // <- fixes some issues with WiFi stability
+
     counter = millis();
     if (counter-oldcounter>interval){
-      // Mqtt
-      if (!client.connected()) {
-        Serial.println("Connect to Mqtt broker...");
-        client.begin(MQTT_SERVER, net);
-        while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
-          Serial.print(".");
-          delay(1000);
-        }
-        Serial.println("Connected!");
-      }
+      Serial.println("----------------");
 
+      // Time & date
       struct tm * timeinfo;
       time(&now);
       timeinfo = localtime(&now);
       sprintf_P(totTime, (PGM_P)F("%02d:%02d"), timeinfo->tm_hour, timeinfo->tm_min);
-
       int realyear = timeinfo->tm_year + 1900;
       int realmon = timeinfo->tm_mon + 1;
       sprintf_P(realDate, (PGM_P)F("%04d-%02d-%02d"), realyear, realmon, timeinfo->tm_mday);
-
-      Serial.println("----------------");
 
       Serial.print("Time: ");
       Serial.println(totTime);
@@ -150,42 +167,61 @@ void loop() {
       u8g2.setFont(u8g2_font_logisoso16_tn);
       u8g2.drawStr( 40, 41, totTime);
 
-      mqttPublish((char *)"/date", realDate);
-      mqttPublish((char *)"/time", totTime);
+      if (!client.connected()) {
+        client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
+      }
+      tempTopic = topic + "/date";
+      client.publish(tempTopic, realDate);
+      tempTopic = topic + "/time";
+      client.publish(tempTopic, totTime);
 
+      // Temp & humidity
       if (sensorPres) {
         temp=htu.readTemperature();
         String stemp = String(temp);  // Dummy to easily measure variable length
         dtostrf(temp, stemp.length()-1, 1, ctemp);
         strcat(ctemp, "C");
-        mqttPublish((char *)"/temp", ctemp);
 
         hum=htu.readHumidity();
         dtostrf(hum, 2, 0, chum);
         strcat(chum, "%");
-        mqttPublish((char *)"/humidity", chum);
 
         Serial.print("Temp: ");
         Serial.println(ctemp);
-        u8g2.setFont(u8g2_font_crox3h_tr);
-        u8g2.drawStr( 20, 60, ctemp);
-
         Serial.print("Humidity: ");
         Serial.println(chum);
+
+        u8g2.setFont(u8g2_font_crox3h_tr);
+        u8g2.drawStr( 20, 60, ctemp);
         u8g2.drawStr( 74, 60, chum);
         u8g2.sendBuffer();
+
+        tempTopic = topic + "/temp";
+        client.publish(tempTopic, ctemp);
+        tempTopic = topic + "/humidity";
+        client.publish(tempTopic, chum);
       }
       else {
-        Serial.println ("No temp/humidity sensor attached");
+        String err =  "No temp/humidity sensor attached";
+        mqttPublish("/error", err);
+        Serial.println(err);
       }
 
-      // Create json-object from all data
       long int timenow = millis();
-      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
-      Serial.print ("jsondata: ");
-      Serial.println (jsondata);
+      Serial.print("Uptime: ");
+      Serial.println(timenow);
+      char tnow[20];
+      sprintf(tnow, "%ld", timenow);
+      if (!client.connected()) {
+        client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
+      }
+      tempTopic = topic + "/uptime";
+      client.publish(tempTopic, tnow);
+
+      // Reset counter
       oldcounter=counter;
-      Serial.print("Millis: ");
-      Serial.println(counter);
   }
+}
+void mqttconnect(){
+
 }

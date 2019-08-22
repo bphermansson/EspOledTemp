@@ -1,1 +1,1 @@
-String mqttPublish(char *subTopic, char *data);
+String mqttPublish(String subTopic, String data);
