@@ -2,8 +2,7 @@
 #include <Arduino.h>
 #include "settings.h"
 #include <ESP8266WiFi.h>
-#include "ESPAsyncWebServer.h"
-//#include "FS.h"
+#include "ESPAsyncWebServer.h"  // https://github.com/me-no-dev/ESPAsyncWebServer
 #include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
@@ -15,12 +14,13 @@
 #include "createJson.h"
 #include "mqttPublish.h"
 #include "ota.h"
+#include "FS.h"
 
 MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
 
-void mqttconnect();
+void mqttconnect();   // Never used! Also remove dfunction further down
 
 String date = "----";
 float temp,hum;
@@ -43,6 +43,10 @@ char chum[5];
 // Declare devices
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
+
+void notFound(AsyncWebServerRequest *request) {
+    request->send(404, "text/plain", "Not found");
+}
 
 void setup() {
   // Init display
@@ -70,7 +74,15 @@ void setup() {
   connectWifi();
 
   delay(1000);
-
+  SPIFFS.begin();                           // Start the SPI Flash Files System
+/*
+  // Initialize SPIFFS
+  if(!SPIFFS.begin(true)){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+*/
+// REMOVE
   //while (!setup_NTP())
   //{}
   setup_NTP();
@@ -127,7 +139,10 @@ void setup() {
   server.on("/readdata", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", jsondata);
   });
+    server.onNotFound(notFound);
+
   server.begin();
+  Serial.println("HTTP server started");
 
   char smess[15];
   strcpy(smess, "Setup done");
@@ -141,6 +156,7 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
     client.loop();
+
     delay(10);  // <- fixes some issues with WiFi stability
 
     counter = millis();
@@ -217,6 +233,10 @@ void loop() {
       }
       tempTopic = topic + "/uptime";
       client.publish(tempTopic, tnow);
+
+      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
+      Serial.print ("jsondata: ");
+      Serial.println (jsondata);
 
       // Reset counter
       oldcounter=counter;

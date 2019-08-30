@@ -1,5 +1,5 @@
 #include <ArduinoJson.h>
-/*
+
 String createJson(String appname, char *totTime, char *realDate, char *ctemp, char *chum, long uptime) {
   const size_t capacity = JSON_OBJECT_SIZE(9);
   DynamicJsonDocument doc(capacity);
@@ -16,4 +16,3 @@ String createJson(String appname, char *totTime, char *realDate, char *ctemp, ch
   serializeJson(doc, output);
   return output;
 }
-*/

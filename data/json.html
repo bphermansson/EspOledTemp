@@ -7,6 +7,7 @@ setInterval(function() {
   getData();
 }, 2000); //2000mSeconds update rate
 
+
 function getData() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
@@ -18,4 +19,5 @@ function getData() {
   xhttp.open("GET", "readdata", true);
   xhttp.send();
 }
+
 </script>
