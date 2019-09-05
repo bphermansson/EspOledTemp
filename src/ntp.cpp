@@ -1,22 +1,3 @@
-/*
-#include "time.h"
-#include <Arduino.h>
-#include "settings.h"
-
-bool setup_NTP() {
-  configTime(GMTOFFSET, DAYLIGHTOFFSET, NTPSERVERNAME);
-
-  Serial.println("\nWaiting for time");
-
-  while (!time(nullptr))
-  {
-    Serial.print(".");
-    delay(1000);
-  }
-  return true;
-}
-*/
-
 #include <ESP8266WiFi.h>
 #include <time.h>                       // time() ctime()
 #include <sys/time.h>                   // struct timeval
@@ -52,7 +33,7 @@ void setup_NTP()
     timezone tz = {0, 0};
     settimeofday(&tv, &tz);
     setenv("TZ", TIME_ZONE, 1);
-    tzset();
+    //tzset();
     configTime(0, 0, NTP_SERVER);
     Serial.println("Setup time done");
   }

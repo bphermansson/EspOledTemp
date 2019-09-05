@@ -11,16 +11,15 @@
 #include <MQTT.h>
 #include "connect.h"
 #include "ntp.h"
+#include "TimeShowFormatted.h"
 #include "createJson.h"
-#include "mqttPublish.h"
+//#include "mqttPublish.h"
 #include "ota.h"
 #include "FS.h"
 
 MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
-
-//void mqttconnect();   // Never used! Also remove dfunction further down
 
 String date = "----";
 float temp,hum;
@@ -49,7 +48,7 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void setup() {
-  // Init display
+  // Init display and print welcome message
   u8g2.begin();
   delay(200);
   u8g2.clearBuffer();
@@ -65,8 +64,6 @@ void setup() {
   Serial.print(APPNAME);
   Serial.println("!");
 
-  delay(1000);
-
   u8g2.clearBuffer();
   u8g2.drawStr( 10, 40, "Connecting...");
   u8g2.sendBuffer();  // Without this the message won't display
@@ -75,16 +72,6 @@ void setup() {
 
   delay(1000);
   SPIFFS.begin();                           // Start the SPI Flash Files System
-/*
-  // Initialize SPIFFS
-  if(!SPIFFS.begin(true)){
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
-  }
-*/
-// REMOVE
-  //while (!setup_NTP())
-  //{}
   setup_NTP();
 
   u8g2.setFont( u8g2_font_crox1c_tf);     // Set Font
@@ -108,6 +95,10 @@ void setup() {
   }
 
   client.begin(MQTT_SERVER, net);
+  //mqtt:lwt(topic, message[, qos[, retain]])
+  client.setWill(MQTT_PUB_TOPIC, "Bye!");
+
+
   Serial.println("Connecting to MQTT broker");
   while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".");
@@ -219,20 +210,21 @@ void loop() {
       }
       else {
         String err =  "No temp/humidity sensor attached";
-        mqttPublish("/error", err);
         Serial.println(err);
+        tempTopic = topic + "/err";
+        client.publish(tempTopic, err);
       }
 
       long int timenow = millis();
       Serial.print("Uptime: ");
       Serial.println(timenow);
-      char tnow[20];
-      sprintf(tnow, "%ld", timenow);
-      if (!client.connected()) {
-        client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
-      }
       tempTopic = topic + "/uptime";
-      client.publish(tempTopic, tnow);
+      client.publish(tempTopic, String(timenow));
+
+      String formTime = TimeShowFormatted(timenow); // Human readable uptime
+      Serial.println(formTime);
+      tempTopic = topic + "/uptimeHuman";
+      client.publish(tempTopic, formTime);
 
       jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
       Serial.print ("jsondata: ");
@@ -242,7 +234,3 @@ void loop() {
       oldcounter=counter;
   }
 }
-/*
-void mqttconnect(){
-
-}*/

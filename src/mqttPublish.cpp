@@ -11,6 +11,7 @@ void mqttPublish(String subTopic, String data) {
     //strcpy(totTopic,cTopic);
     //strcat(totTopic,subTopic);
     Serial.println("mqtt");
-    //client.publish(totTopic, data);
-    //client.publish(MQTT_PUB_TOPIC, data);
+    Serial.println(subTopic);
+    client.publish(totTopic, data);
+    client.publish(MQTT_PUB_TOPIC+subTopic, data);
 }
