@@ -20,7 +20,7 @@ MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
 
-void mqttconnect();   // Never used! Also remove dfunction further down
+//void mqttconnect();   // Never used! Also remove dfunction further down
 
 String date = "----";
 float temp,hum;
@@ -118,7 +118,7 @@ void setup() {
   Serial.println(MQTT_PUB_TOPIC);
 
   if (!client.connected()) {
-    mqttconnect();
+    client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
   }
   String welmess = "Welcome to ";
   welmess += APPNAME;
@@ -242,6 +242,7 @@ void loop() {
       oldcounter=counter;
   }
 }
+/*
 void mqttconnect(){
 
-}
+}*/
