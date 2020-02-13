@@ -6,7 +6,7 @@
 const char ssid[] = MYSSID;
 const char pass[] = PASSWORD;
 
-void connectWifi() {
+String connectWifi() {
   Serial.begin(115200);
   Serial.println("Connect to Wifi...");
   WiFi.persistent(false);  // Do not write Wifi settings to flash
@@ -16,7 +16,15 @@ void connectWifi() {
     Serial.print(".");
     delay(500);
   }
+
+  IPAddress ipaddr;
+  //ipaddr = WiFi.localIP();
+  //ip = ipaddr.toString();
+
   Serial.println();
   Serial.print("Connected to Wifi with IP ");
-  Serial.println(WiFi.localIP());
+  String conIP = WiFi.localIP().toString();
+  Serial.println(conIP);
+  return conIP;
+  //return ip;
 }

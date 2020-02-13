@@ -13,7 +13,6 @@
 #include "ntp.h"
 #include "TimeShowFormatted.h"
 #include "createJson.h"
-//#include "mqttPublish.h"
 #include "ota.h"
 #include "FS.h"
 
@@ -33,7 +32,7 @@ const char mqttpass[] = MQTT_PASSWORD;
 char appname[] = APPNAME;
 String topic = MQTT_PUB_TOPIC;
 
-String tempTopic, htmldata, jsondata;
+String tempTopic, htmldata, jsondata, myip;
 char totTime[20];
 char realDate[20];
 char ctemp[8];
@@ -68,7 +67,7 @@ void setup() {
   u8g2.drawStr( 10, 40, "Connecting...");
   u8g2.sendBuffer();  // Without this the message won't display
 
-  connectWifi();
+  myip = connectWifi();
 
   delay(1000);
   SPIFFS.begin();                           // Start the SPI Flash Files System
@@ -95,7 +94,6 @@ void setup() {
   }
 
   client.begin(MQTT_SERVER, net);
-  //mqtt:lwt(topic, message[, qos[, retain]])
   client.setWill(MQTT_PUB_TOPIC, "Bye!");
 
 
@@ -226,7 +224,10 @@ void loop() {
       tempTopic = topic + "/uptimeHuman";
       client.publish(tempTopic, formTime);
 
-      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow);
+      tempTopic = topic + "/ip";
+      client.publish(tempTopic, myip);
+
+      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow,formTime,myip);
       Serial.print ("jsondata: ");
       Serial.println (jsondata);
 

@@ -1,4 +1,4 @@
 #include <Arduino.h>
 
-void connectWifi();
+String connectWifi();
 int connectMqtt(MQTTClient client);

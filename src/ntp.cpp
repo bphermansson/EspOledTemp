@@ -35,5 +35,8 @@ void setup_NTP()
     setenv("TZ", TIME_ZONE, 1);
     //tzset();
     configTime(0, 0, NTP_SERVER);
+            setenv("TZ", "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", 1);
+        tzset();
+
     Serial.println("Setup time done");
   }
