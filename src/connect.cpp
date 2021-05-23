@@ -10,8 +10,10 @@ String connectWifi() {
   Serial.begin(115200);
   Serial.println("Connect to Wifi...");
   WiFi.persistent(false);  // Do not write Wifi settings to flash
-  WiFi.begin(ssid, pass);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin("BrandstorpWifi", "Brandstorp");
 
+  Serial.println("Connect to Wifi!!!...");
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(500);
