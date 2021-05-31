@@ -6,3 +6,5 @@ The values are also presented via a dynamic webpage where you can see the values
 ![Screenshot](https://github.com/bphermansson/EspOledTemp/blob/dev/screenshot.png)
 
 ![Device](https://github.com/bphermansson/EspOledTemp/blob/dev/device.jpg)
+
+More information: http://paheco.nu/espoledtemp/
