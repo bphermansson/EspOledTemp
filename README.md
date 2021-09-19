@@ -9,3 +9,5 @@ To get going, open include/settings.example, rename it to include/settings.h and
 ![Screenshot](https://github.com/bphermansson/EspOledTemp/blob/dev/screenshot.png)
 
 ![Device](https://github.com/bphermansson/EspOledTemp/blob/dev/device.jpg)
+
+More information: http://paheco.nu/espoledtemp/
