@@ -26,7 +26,7 @@ time_t now;
 int counter;
 int oldcounter = 15000;
 bool sensorPres = true;
-const int interval = 15000;
+const int interval = 30000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
 char appname[] = APPNAME;
