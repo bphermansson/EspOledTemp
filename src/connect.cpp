@@ -8,25 +8,31 @@ const char pass[] = PASSWORD;
 
 String connectWifi() {
   Serial.begin(115200);
+  delay(2000);
   Serial.println("Connect to Wifi...");
   WiFi.persistent(false);  // Do not write Wifi settings to flash
   WiFi.mode(WIFI_STA);
-  WiFi.begin("BrandstorpWifi", "Brandstorp");
+  WiFi.begin(ssid, pass);
 
-  Serial.println("Connect to Wifi!!!...");
+  int connAttempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
+    Serial.printf(". %i \n", connAttempts);
+    connAttempts++;
+    if (connAttempts>15) {
+      Serial.println("WiFi connection error, check your settings.");    
+      Serial.println((String)"In settings ssid="+ssid+" and pass="+pass);      
+      /*
+      u8g2.clearBuffer();
+      u8g2.drawStr( 1, 20, "WiFi connection ");
+      u8g2.drawStr( 1, 35, "error");
+      u8g2.sendBuffer();       
+      */
+      while(connAttempts > 15) {
+        yield();
+      }
+    }
+    delay(1000);
   }
-
-  IPAddress ipaddr;
-  //ipaddr = WiFi.localIP();
-  //ip = ipaddr.toString();
-
-  Serial.println();
-  Serial.print("Connected to Wifi with IP ");
   String conIP = WiFi.localIP().toString();
-  Serial.println(conIP);
   return conIP;
-  //return ip;
 }

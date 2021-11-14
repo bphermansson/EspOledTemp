@@ -1,20 +1,23 @@
 
 #include <Arduino.h>
 #include "settings.h"
+#include "printOnOled.h"
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"  // https://github.com/me-no-dev/ESPAsyncWebServer
-#include <U8g2lib.h>
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
+#include <SPI.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 #include <MQTT.h>
 #include "connect.h"
+#include "printOnOled.h"
 #include "ntp.h"
 #include "TimeShowFormatted.h"
 #include "createJson.h"
 #include "ota.h"
 #include "FS.h"
+//#include <U8g2lib.h>
 
 MQTTClient client;
 WiFiClient net;
@@ -29,7 +32,7 @@ bool sensorPres = true;
 const int interval = 30000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
-char appname[] = APPNAME;
+const char appname[50] = APPNAME;
 String topic = MQTT_PUB_TOPIC;
 
 String tempTopic, htmldata, jsondata, myip;
@@ -39,7 +42,6 @@ char ctemp[8];
 char chum[5];
 
 // Declare devices
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 void notFound(AsyncWebServerRequest *request) {
@@ -48,58 +50,89 @@ void notFound(AsyncWebServerRequest *request) {
 
 void setup() {
   // Init display and print welcome message
+  /*
   u8g2.begin();
   delay(200);
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_crox3h_tr);
   u8g2.drawStr( 10, 40, APPNAME);
   u8g2.sendBuffer();  // Without this the message won't display
+*/
 
   Serial.begin(115200);
-  Serial.println();
-  delay(100);
-
+  delay(2000);
   Serial.print("Welcome to ");
   Serial.print(APPNAME);
   Serial.println("!");
+  delay(2000);
+  
+  char tmp[] = {APPNAME};
+  //strcpy(textToWriteOled, tmp);
+  printoled(10,40);
+  printoled(10,40);
 
-  u8g2.clearBuffer();
-  u8g2.drawStr( 10, 40, "Connecting...");
-  u8g2.sendBuffer();  // Without this the message won't display
-
+// Connect to WiFi
   myip = connectWifi();
 
-  delay(1000);
+// Print IP address to Oled & Serial
+  char __myip[sizeof(myip)];
+  myip.toCharArray(__myip, 20);
+  Serial.printf("Connected to Wifi with IP %s\n", __myip);
+  printoled(10, 40);
+
+  delay(2000);
+
   SPIFFS.begin();                           // Start the SPI Flash Files System
+
+// Set time  
   setup_NTP();
 
-  u8g2.setFont( u8g2_font_crox1c_tf);     // Set Font
-  // Init sensor
+// Init sensor
   if (!htu.begin()) {
-  //if (htu.begin()) {
     char error[25];
     strcpy (error, "Sensor error");
     Serial.println(error);
-    u8g2.clearBuffer();
+  /*  u8g2.clearBuffer();
     u8g2.drawStr( 10, 40, error);
-    u8g2.sendBuffer();
+    u8g2.sendBuffer();*/
+    //printonoled.printoled(10, 10, error);
     delay(5000);
     while (1){};
   }
   else {
-    u8g2.clearBuffer();
-    u8g2.drawStr( 10, 40, "Sensor ok");
+    /*u8g2.clearBuffer();
+    u8g2.drawStr( 1, 40, "Sensor ok");
     u8g2.sendBuffer();  // Without this the message won't display
-    delay(1000);
+*/
+    //printonoled.printoled(10, 10, "Sensor ok");
+    delay(2000);
   }
 
   client.begin(MQTT_SERVER, net);
   client.setWill(MQTT_PUB_TOPIC, "Bye!");
 
-
   Serial.println("Connecting to MQTT broker");
+  /*u8g2.clearBuffer();
+  u8g2.drawStr( 1, 20, "Waiting for");
+  u8g2.drawStr( 1, 35, "MQTT connection");
+  u8g2.sendBuffer(); 
+  */
+  //printonoled.printoled(0, 15, "Connecting to MQTT broker");
+
+  int connAttempts = 0;
   while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
-    Serial.print(".");
+    Serial.printf(". %i \n", connAttempts);
+    connAttempts++;
+    if (connAttempts>10) {
+      Serial.print("MQTT connection error, check your settings.");
+    /*  u8g2.clearBuffer();
+      u8g2.drawStr( 1, 20, "MQTT connection ");
+      u8g2.drawStr( 1, 35, "error");
+      u8g2.sendBuffer();       */
+      while(connAttempts > 10) {
+        yield();
+      }
+    }
     delay(1000);
   }
   Serial.println("Connected!");
@@ -136,10 +169,10 @@ void setup() {
   char smess[15];
   strcpy(smess, "Setup done");
   Serial.println(smess);
-  u8g2.clearBuffer();
+  /*u8g2.clearBuffer();
   u8g2.drawStr( 10, 40, smess);
   u8g2.sendBuffer();  // Without this the message won't display
-  delay(1000);
+  delay(1000);*/
 }
 
 void loop() {
@@ -165,13 +198,13 @@ void loop() {
       Serial.println(totTime);
       Serial.print("Date: ");
       Serial.println(realDate);
-
+/*
       u8g2.clearBuffer();
       u8g2.setFont(u8g2_font_crox3h_tr);
       u8g2.drawStr( 21, 13, realDate);  // x, y
       u8g2.setFont(u8g2_font_logisoso16_tn);
       u8g2.drawStr( 40, 41, totTime);
-
+*/
       if (!client.connected()) {
         client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
       }
@@ -195,12 +228,12 @@ void loop() {
         Serial.println(ctemp);
         Serial.print("Humidity: ");
         Serial.println(chum);
-
+/*
         u8g2.setFont(u8g2_font_crox3h_tr);
         u8g2.drawStr( 20, 60, ctemp);
         u8g2.drawStr( 74, 60, chum);
         u8g2.sendBuffer();
-
+*/
         tempTopic = topic + "/temp";
         client.publish(tempTopic, ctemp);
         tempTopic = topic + "/humidity";
