@@ -1,7 +1,7 @@
 
 #include <Arduino.h>
 #include "settings.h"
-#include "printOnOled.h"
+//#include "printOnOled.h"
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"  // https://github.com/me-no-dev/ESPAsyncWebServer
 #include <Wire.h>
@@ -32,9 +32,11 @@ bool sensorPres = true;
 const int interval = 30000;
 const char mqttuser[] = MQTT_USERNAME;
 const char mqttpass[] = MQTT_PASSWORD;
-const char appname[50] = APPNAME;
-String topic = MQTT_PUB_TOPIC;
 
+String topic = MQTT_PUB_TOPIC;
+const char appname[50] = APPNAME;
+
+char text_to_write_oled[55];
 String tempTopic, htmldata, jsondata, myip;
 char totTime[20];
 char realDate[20];
@@ -49,75 +51,60 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 void setup() {
-  // Init display and print welcome message
-  /*
-  u8g2.begin();
-  delay(200);
-  u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_crox3h_tr);
-  u8g2.drawStr( 10, 40, APPNAME);
-  u8g2.sendBuffer();  // Without this the message won't display
-*/
-
   Serial.begin(115200);
   delay(2000);
-  Serial.print("Welcome to ");
-  Serial.print(APPNAME);
-  Serial.println("!");
-  delay(2000);
+  Serial.printf("Welcome to %s!", APPNAME);
   
   char tmp[] = {APPNAME};
-  //strcpy(textToWriteOled, tmp);
-  printoled(10,40);
-  printoled(10,40);
+  strcpy(text_to_write_oled, tmp);
+  printoled(text_to_write_oled, 10, 20);
 
-// Connect to WiFi
+  delay(2000);
+
+  const char ssid[] = MYSSID;
+  strcpy (text_to_write_oled, "Connect to ");
+  strcat (text_to_write_oled, ssid);
+  Serial.println(text_to_write_oled);
+  printoled(text_to_write_oled, 10, 20);
+
+  // Connect to WiFi
   myip = connectWifi();
 
-// Print IP address to Oled & Serial
+  // Print IP address to Oled & Serial
   char __myip[sizeof(myip)];
   myip.toCharArray(__myip, 20);
   Serial.printf("Connected to Wifi with IP %s\n", __myip);
-  printoled(10, 40);
+  printoled(__myip, 10, 40);
 
   delay(2000);
 
   SPIFFS.begin();                           // Start the SPI Flash Files System
 
-// Set time  
+  // Set time  
   setup_NTP();
 
-// Init sensor
-  if (!htu.begin()) {
-    char error[25];
-    strcpy (error, "Sensor error");
-    Serial.println(error);
-  /*  u8g2.clearBuffer();
-    u8g2.drawStr( 10, 40, error);
-    u8g2.sendBuffer();*/
-    //printonoled.printoled(10, 10, error);
+  // Init sensor
+  if (!htu.begin()) 
+  {  
+    strcpy (text_to_write_oled, "Sensor error");
+    Serial.println(text_to_write_oled);
+    printoled(text_to_write_oled, 10, 40);
     delay(5000);
     while (1){};
   }
-  else {
-    /*u8g2.clearBuffer();
-    u8g2.drawStr( 1, 40, "Sensor ok");
-    u8g2.sendBuffer();  // Without this the message won't display
-*/
-    //printonoled.printoled(10, 10, "Sensor ok");
+  else 
+  {
+    strcpy (text_to_write_oled, "Sensor ok");
+    printoled(text_to_write_oled, 10, 10);
     delay(2000);
   }
 
   client.begin(MQTT_SERVER, net);
   client.setWill(MQTT_PUB_TOPIC, "Bye!");
 
-  Serial.println("Connecting to MQTT broker");
-  /*u8g2.clearBuffer();
-  u8g2.drawStr( 1, 20, "Waiting for");
-  u8g2.drawStr( 1, 35, "MQTT connection");
-  u8g2.sendBuffer(); 
-  */
-  //printonoled.printoled(0, 15, "Connecting to MQTT broker");
+  strcpy (text_to_write_oled, "Connect to MQTT server");
+  Serial.println(text_to_write_oled);
+  printoled(text_to_write_oled, 10, 10);
 
   int connAttempts = 0;
   while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
@@ -135,9 +122,17 @@ void setup() {
     }
     delay(1000);
   }
-  Serial.println("Connected!");
+
+  strcpy (text_to_write_oled, "Connected!");
+  strcat (text_to_write_oled, ssid);
+  Serial.println(text_to_write_oled);
+  printoled(text_to_write_oled, 10, 10);
+
+  delay(1000);
+
   Serial.print("Publishing to: ");
   Serial.println(MQTT_PUB_TOPIC);
+  printoled(MQTT_PUB_TOPIC, 10, 20);
 
   if (!client.connected()) {
     client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
