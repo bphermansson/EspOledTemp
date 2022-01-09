@@ -16,25 +16,28 @@ int totlen=0, pos=0, wordnr=1;
 
 void my_fn(char *token, int x, int y)
 {
-  Serial.println(token);
   totlen+=strlen(token);
-  Serial.println(totlen);
   if(totlen>15)
   {
     y+=18;
     wordnr=1;
-    pos=0;
+    x=0;
   }
-  else
-  {
-    ;
-  }
-  Serial.println(pos);
-  Serial.printf("Wordnr: %i\n", wordnr);
+
   wordnr++;
-  u8g2.drawStr(pos, y, token);
+  u8g2.drawStr(x, y, token);
   u8g2.sendBuffer();
-  pos+=(u8g2.getStrWidth(token)+3);
+  x+=(u8g2.getStrWidth(token)+3);
+}
+
+void initOled()
+{
+  u8g2.begin();
+}
+
+void clearOled()
+{
+  u8g2.clearBuffer();
 }
 
 void printoled(char text_to_write_oled[], int x, int y)
@@ -43,33 +46,23 @@ void printoled(char text_to_write_oled[], int x, int y)
   Serial.println("Will soon print to oled: ");
   Serial.println(text_to_write_oled);
   
+  u8g2_uint_t dh = u8g2.getDisplayHeight();
+  u8g2_uint_t dw = u8g2.getDisplayWidth();
+  Serial.printf("Oled size: %d x %d\n", dw, dh);
 
-  u8g2.begin();
   delay(200);
-  u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_crox3h_tr);
   
-  int txtLength=0, printlen=0, totprintlen=0;
-  txtLength = strlen(text_to_write_oled);
-  Serial.print("txtLength: ");
-  Serial.println (txtLength);
+  int txtLength=0, totprintlen=0;
+  char *token, *str, *tofree;
+  tofree = str = strdup(text_to_write_oled);  // We own str's memory now.
+  while ((token = strsep(&str, " "))) my_fn(token, x, y);
 
-// More general pattern:
-const char *my_str_literal = "JAN,FEB,MAR";
-char *token, *str, *tofree;
-
-tofree = str = strdup(text_to_write_oled);  // We own str's memory now.
-while ((token = strsep(&str, " "))) my_fn(token, x, y);
-free(tofree);
-totlen=0;
-pos=0;   
-    wordnr=1;
-
-      Serial.printf("%d %d\n", x, y);
-      //u8g2.drawStr(x, y, t);
-      u8g2.sendBuffer();
-   
-  
-  
+  // Clean up and reset.
+  //free(tofree);
+  free(str);
+  totlen=0;
+  pos=0;   
+  wordnr=1;
 }
 

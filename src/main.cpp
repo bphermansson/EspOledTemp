@@ -17,7 +17,8 @@
 #include "createJson.h"
 #include "ota.h"
 #include "FS.h"
-//#include <U8g2lib.h>
+
+#define dispTime 1000
 
 MQTTClient client;
 WiFiClient net;
@@ -52,20 +53,23 @@ void notFound(AsyncWebServerRequest *request) {
 
 void setup() {
   Serial.begin(115200);
-  delay(2000);
+  delay(1000);
   Serial.printf("Welcome to %s!", APPNAME);
   
+  initOled();
   char tmp[] = {APPNAME};
   strcpy(text_to_write_oled, tmp);
   printoled(text_to_write_oled, 10, 20);
-
-  delay(2000);
+  delay(dispTime);
+  clearOled();
 
   const char ssid[] = MYSSID;
   strcpy (text_to_write_oled, "Connect to ");
   strcat (text_to_write_oled, ssid);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
+  delay(dispTime);
+  clearOled();
 
   // Connect to WiFi
   myip = connectWifi();
@@ -74,9 +78,11 @@ void setup() {
   char __myip[sizeof(myip)];
   myip.toCharArray(__myip, 20);
   Serial.printf("Connected to Wifi with IP %s\n", __myip);
-  printoled(__myip, 10, 40);
 
-  delay(2000);
+  printoled("IP: ", 10, 20); 
+  printoled(__myip, 10, 40);
+  delay(dispTime);
+  clearOled();    
 
   SPIFFS.begin();                           // Start the SPI Flash Files System
 
@@ -89,14 +95,14 @@ void setup() {
     strcpy (text_to_write_oled, "Sensor error");
     Serial.println(text_to_write_oled);
     printoled(text_to_write_oled, 10, 40);
-    delay(5000);
     while (1){};
   }
   else 
   {
     strcpy (text_to_write_oled, "Sensor ok");
-    printoled(text_to_write_oled, 10, 10);
-    delay(2000);
+    printoled(text_to_write_oled, 10, 40);
+    delay(dispTime);
+    clearOled();
   }
 
   client.begin(MQTT_SERVER, net);
@@ -104,7 +110,9 @@ void setup() {
 
   strcpy (text_to_write_oled, "Connect to MQTT server");
   Serial.println(text_to_write_oled);
-  printoled(text_to_write_oled, 10, 10);
+  printoled(text_to_write_oled, 10, 20);
+  delay(dispTime);
+  clearOled();
 
   int connAttempts = 0;
   while (!client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD)) {
@@ -112,10 +120,11 @@ void setup() {
     connAttempts++;
     if (connAttempts>10) {
       Serial.print("MQTT connection error, check your settings.");
-    /*  u8g2.clearBuffer();
-      u8g2.drawStr( 1, 20, "MQTT connection ");
-      u8g2.drawStr( 1, 35, "error");
-      u8g2.sendBuffer();       */
+      strcpy (text_to_write_oled, "MQTT connection error");
+      printoled(text_to_write_oled, 10, 20);
+      delay(dispTime);
+      clearOled();
+
       while(connAttempts > 10) {
         yield();
       }
@@ -123,16 +132,18 @@ void setup() {
     delay(1000);
   }
 
-  strcpy (text_to_write_oled, "Connected!");
+  strcpy (text_to_write_oled, "Connected! ");
   strcat (text_to_write_oled, ssid);
   Serial.println(text_to_write_oled);
-  printoled(text_to_write_oled, 10, 10);
-
-  delay(1000);
+  printoled(text_to_write_oled, 10, 20);
+  delay(dispTime);
+  clearOled();
 
   Serial.print("Publishing to: ");
   Serial.println(MQTT_PUB_TOPIC);
   printoled(MQTT_PUB_TOPIC, 10, 20);
+  delay(dispTime);
+  clearOled();
 
   if (!client.connected()) {
     client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
@@ -164,10 +175,9 @@ void setup() {
   char smess[15];
   strcpy(smess, "Setup done");
   Serial.println(smess);
-  /*u8g2.clearBuffer();
-  u8g2.drawStr( 10, 40, smess);
-  u8g2.sendBuffer();  // Without this the message won't display
-  delay(1000);*/
+  printoled(smess, 10, 20);
+  delay(dispTime);
+  clearOled();
 }
 
 void loop() {
@@ -193,13 +203,10 @@ void loop() {
       Serial.println(totTime);
       Serial.print("Date: ");
       Serial.println(realDate);
-/*
-      u8g2.clearBuffer();
-      u8g2.setFont(u8g2_font_crox3h_tr);
-      u8g2.drawStr( 21, 13, realDate);  // x, y
-      u8g2.setFont(u8g2_font_logisoso16_tn);
-      u8g2.drawStr( 40, 41, totTime);
-*/
+
+      printoled(realDate, 10, 42);
+      printoled(totTime, 10, 62);
+
       if (!client.connected()) {
         client.connect(APPNAME, MQTT_USERNAME, MQTT_PASSWORD);
       }
@@ -214,10 +221,12 @@ void loop() {
         String stemp = String(temp);  // Dummy to easily measure variable length
         dtostrf(temp, stemp.length()-1, 1, ctemp);
         strcat(ctemp, "C");
+        printoled(ctemp, 10, 15);
 
         hum=htu.readHumidity();
         dtostrf(hum, 2, 0, chum);
         strcat(chum, "%");
+        printoled(chum, 80, 15);
 
         Serial.print("Temp: ");
         Serial.println(ctemp);
