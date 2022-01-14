@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <MQTT.h>
+#include "printOnOled.h"
 #include "settings.h"
 
 const char ssid[] = MYSSID;
@@ -21,12 +22,8 @@ String connectWifi() {
     if (connAttempts>15) {
       Serial.println("WiFi connection error, check your settings.");    
       Serial.println((String)"In settings ssid="+ssid+" and pass="+pass);      
-      /*
-      u8g2.clearBuffer();
-      u8g2.drawStr( 1, 20, "WiFi connection ");
-      u8g2.drawStr( 1, 35, "error");
-      u8g2.sendBuffer();       
-      */
+      printoled("Wifi connection error", 10, 20);
+
       while(connAttempts > 15) {
         yield();
       }
