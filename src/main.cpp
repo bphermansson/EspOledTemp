@@ -12,11 +12,11 @@
 #include <MQTT.h>
 #include "connect.h"
 #include "printOnOled.h"
-#include "ntp.h"
 #include "TimeShowFormatted.h"
 #include "createJson.h"
 #include "ota.h"
 #include "FS.h"
+#include <ntp.h>
 
 #define dispTime 1000
 
@@ -87,8 +87,7 @@ void setup() {
   SPIFFS.begin();                           // Start the SPI Flash Files System
 
   // Set time  
-  setup_NTP();
-
+  //setup_NTP();
   // Init sensor
   if (!htu.begin()) 
   {  
