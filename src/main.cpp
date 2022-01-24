@@ -17,6 +17,8 @@
 #include "createJson.h"
 #include "ota.h"
 #include "FS.h"
+#include "LittleFS.h"
+
 //#include <U8g2lib.h>
 
 MQTTClient client;
@@ -82,7 +84,11 @@ void setup() {
 
   delay(2000);
 
-  SPIFFS.begin();                           // Start the SPI Flash Files System
+  //SPIFFS.begin();                           // Start the SPI Flash Files System
+  if(!LittleFS.begin()){
+    Serial.println("An Error has occurred while mounting LittleFS");
+    return;
+  }
 
 // Set time  
   setup_NTP();
@@ -150,13 +156,13 @@ void setup() {
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.html", String(), false);
+    request->send(LittleFS, "/index.html", String(), false);
   });
   server.on("/json.html", HTTP_GET, [](AsyncWebServerRequest *request){
   });
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
+    request->send(LittleFS, "/style.css", "text/css");
   });
   server.on("/readdata", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", jsondata);

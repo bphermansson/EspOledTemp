@@ -7,7 +7,7 @@
 
 // vars need to be extern
 //extern String myName;
-extern char textToWriteOled[50] = {0};
+//extern char textToWriteOled[50] = {0};
 //extern char *mess[];
 //extern char *ptr_mess;
 //extern String myName;
