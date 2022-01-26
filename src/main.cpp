@@ -17,8 +17,7 @@
 #include "ota.h"
 #include "FS.h"
 #include <ntp.h>
-
-#define dispTime 1000
+#include "LittleFS.h"
 
 MQTTClient client;
 WiFiClient net;
@@ -84,7 +83,11 @@ void setup() {
   delay(dispTime);
   clearOled();    
 
-  SPIFFS.begin();                           // Start the SPI Flash Files System
+  //SPIFFS.begin();                           // Start the SPI Flash Files System
+  if(!LittleFS.begin()){
+    Serial.println("An Error has occurred while mounting LittleFS");
+    return;
+  }
 
   // Set time  
   //setup_NTP();
@@ -155,13 +158,13 @@ void setup() {
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.html", String(), false);
+    request->send(LittleFS, "/index.html", String(), false);
   });
   server.on("/json.html", HTTP_GET, [](AsyncWebServerRequest *request){
   });
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
+    request->send(LittleFS, "/style.css", "text/css");
   });
   server.on("/readdata", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", jsondata);
