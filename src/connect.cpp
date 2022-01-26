@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <MQTT.h>
-#include "printOnOled.h"
+#include <print_on_oled.h>
 #include "settings.h"
 
 const char ssid[] = MYSSID;

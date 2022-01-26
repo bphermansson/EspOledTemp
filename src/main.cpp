@@ -11,7 +11,7 @@
 #include <ArduinoOTA.h>
 #include <MQTT.h>
 #include "connect.h"
-#include "printOnOled.h"
+#include <print_on_oled.h>
 #include "TimeShowFormatted.h"
 #include "createJson.h"
 #include "ota.h"
@@ -59,7 +59,7 @@ void setup() {
   char tmp[] = {APPNAME};
   strcpy(text_to_write_oled, tmp);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   const char ssid[] = MYSSID;
@@ -67,7 +67,7 @@ void setup() {
   strcat (text_to_write_oled, ssid);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   // Connect to WiFi
@@ -80,7 +80,7 @@ void setup() {
 
   printoled("IP: ", 10, 20); 
   printoled(__myip, 10, 40);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();    
 
   //SPIFFS.begin();                           // Start the SPI Flash Files System
@@ -103,7 +103,7 @@ void setup() {
   {
     strcpy (text_to_write_oled, "Sensor ok");
     printoled(text_to_write_oled, 10, 40);
-    delay(dispTime);
+    delay(DISPLAY_TIME);
     clearOled();
   }
 
@@ -113,7 +113,7 @@ void setup() {
   strcpy (text_to_write_oled, "Connect to MQTT server");
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   int connAttempts = 0;
@@ -124,7 +124,7 @@ void setup() {
       Serial.print("MQTT connection error, check your settings.");
       strcpy (text_to_write_oled, "MQTT connection error");
       printoled(text_to_write_oled, 10, 20);
-      delay(dispTime);
+      delay(DISPLAY_TIME);
       clearOled();
 
       while(connAttempts > 10) {
@@ -138,13 +138,13 @@ void setup() {
   strcat (text_to_write_oled, ssid);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   Serial.print("Publishing to: ");
   Serial.println(MQTT_PUB_TOPIC);
   printoled(MQTT_PUB_TOPIC, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   if (!client.connected()) {
@@ -178,7 +178,7 @@ void setup() {
   strcpy(smess, "Setup done");
   Serial.println(smess);
   printoled(smess, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 }
 
