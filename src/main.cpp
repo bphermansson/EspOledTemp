@@ -24,7 +24,6 @@ WiFiClient net;
 AsyncWebServer server(80);
 
 String date = "----";
-float temp,hum;
 time_t now;
 int counter;
 int oldcounter = 15000;
@@ -53,18 +52,20 @@ void notFound(AsyncWebServerRequest *request) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.printf("Welcome to %s!", APPNAME);
-  
+  Serial.print(F("Welcome to "));
+  Serial.println(APPNAME); 
+
   initOled();
-  char tmp[] = {APPNAME};
-  strcpy(text_to_write_oled, tmp);
+  //char tmp[] = {APPNAME};
+  //strcpy(text_to_write_oled, tmp);
+  strcpy(text_to_write_oled, APPNAME);
   printoled(text_to_write_oled, 10, 20);
   delay(DISPLAY_TIME);
   clearOled();
 
-  const char ssid[] = MYSSID;
+  //const char ssid[] = MYSSID;
   strcpy (text_to_write_oled, "Connect to ");
-  strcat (text_to_write_oled, ssid);
+  strcat (text_to_write_oled, MYSSID);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
   delay(DISPLAY_TIME);
@@ -83,7 +84,6 @@ void setup() {
   delay(DISPLAY_TIME);
   clearOled();    
 
-  //SPIFFS.begin();                           // Start the SPI Flash Files System
   if(!LittleFS.begin()){
     Serial.println("An Error has occurred while mounting LittleFS");
     return;
@@ -91,6 +91,7 @@ void setup() {
 
   // Set time  
   //setup_NTP();
+
   // Init sensor
   if (!htu.begin()) 
   {  
@@ -135,7 +136,7 @@ void setup() {
   }
 
   strcpy (text_to_write_oled, "Connected! ");
-  strcat (text_to_write_oled, ssid);
+  strcat (text_to_write_oled, MYSSID);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
   delay(DISPLAY_TIME);
@@ -219,17 +220,21 @@ void loop() {
 
       // Temp & humidity
       if (sensorPres) {
+        static float temp,hum;
         temp=htu.readTemperature();
         String stemp = String(temp);  // Dummy to easily measure variable length
-        dtostrf(temp, stemp.length()-1, 1, ctemp);
+        dtostrf(temp, stemp.length()-1, 1, ctemp);  // Float to string
         strcat(ctemp, "C");
         printoled(ctemp, 10, 15);
 
         hum=htu.readHumidity();
+
+        sprintf(chum, "%02lf", hum); // Does this work instead of dtostrf?
+        /*
         dtostrf(hum, 2, 0, chum);
         strcat(chum, "%");
         printoled(chum, 80, 15);
-
+        */
         Serial.print("Temp: ");
         Serial.println(ctemp);
         Serial.print("Humidity: ");

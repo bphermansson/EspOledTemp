@@ -10,7 +10,6 @@
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
-//#define BUFFERLEN 20
 int totlen=0, pos=0, wordnr=1;
 
 void my_fn(char *token, int x, int y)
@@ -62,7 +61,6 @@ void printoled(char text_to_write_oled[], int x, int y)
   while ((token = strsep(&str, " "))) my_fn(token, x, y);
 
   // Clean up and reset.
-  //free(tofree);
   free(str);
   totlen=0;
   pos=0;   
