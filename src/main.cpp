@@ -5,7 +5,6 @@
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"  // https://github.com/me-no-dev/ESPAsyncWebServer
 #include <Wire.h>
-#include "Adafruit_HTU21DF.h"
 #include <SPI.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
@@ -18,6 +17,7 @@
 #include "FS.h"
 #include <ntp.h>
 #include "LittleFS.h"
+#include "htu21d.h"
 
 MQTTClient client;
 WiFiClient net;
@@ -39,11 +39,7 @@ char text_to_write_oled[55];
 String tempTopic, htmldata, jsondata, myip;
 char totTime[20];
 char realDate[20];
-char ctemp[8];
-char chum[5];
 
-// Declare devices
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 void notFound(AsyncWebServerRequest *request) {
     request->send(404, "text/plain", "Not found");
@@ -92,21 +88,7 @@ void setup() {
   // Set time  
   //setup_NTP();
 
-  // Init sensor
-  if (!htu.begin()) 
-  {  
-    strcpy (text_to_write_oled, "Sensor error");
-    Serial.println(text_to_write_oled);
-    printoled(text_to_write_oled, 10, 40);
-    while (1){};
-  }
-  else 
-  {
-    strcpy (text_to_write_oled, "Sensor ok");
-    printoled(text_to_write_oled, 10, 40);
-    delay(DISPLAY_TIME);
-    clearOled();
-  }
+
 
   client.begin(MQTT_SERVER, net);
   client.setWill(MQTT_PUB_TOPIC, "Bye!");
@@ -218,45 +200,6 @@ void loop() {
       tempTopic = topic + "/time";
       client.publish(tempTopic, totTime);
 
-      // Temp & humidity
-      if (sensorPres) {
-        static float temp,hum;
-        temp=htu.readTemperature();
-        String stemp = String(temp);  // Dummy to easily measure variable length
-        dtostrf(temp, stemp.length()-1, 1, ctemp);  // Float to string
-        strcat(ctemp, "C");
-        printoled(ctemp, 10, 15);
-
-        hum=htu.readHumidity();
-
-        sprintf(chum, "%02lf", hum); // Does this work instead of dtostrf?
-        /*
-        dtostrf(hum, 2, 0, chum);
-        strcat(chum, "%");
-        printoled(chum, 80, 15);
-        */
-        Serial.print("Temp: ");
-        Serial.println(ctemp);
-        Serial.print("Humidity: ");
-        Serial.println(chum);
-/*
-        u8g2.setFont(u8g2_font_crox3h_tr);
-        u8g2.drawStr( 20, 60, ctemp);
-        u8g2.drawStr( 74, 60, chum);
-        u8g2.sendBuffer();
-*/
-        tempTopic = topic + "/temp";
-        client.publish(tempTopic, ctemp);
-        tempTopic = topic + "/humidity";
-        client.publish(tempTopic, chum);
-      }
-      else {
-        String err =  "No temp/humidity sensor attached";
-        Serial.println(err);
-        tempTopic = topic + "/err";
-        client.publish(tempTopic, err);
-      }
-
       long int timenow = millis();
       Serial.print("Uptime: ");
       Serial.println(timenow);
@@ -271,7 +214,7 @@ void loop() {
       tempTopic = topic + "/ip";
       client.publish(tempTopic, myip);
 
-      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow,formTime,myip);
+      //jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow,formTime,myip);
       Serial.print ("jsondata: ");
       Serial.println (jsondata);
 
