@@ -34,17 +34,10 @@ void init_htu()
   // Init sensor
   if (!htu.begin()) 
   {  
-    //strcpy (text_to_write_oled, "Sensor error");
-    //Serial.println(text_to_write_oled);
-    //printoled(text_to_write_oled, 10, 40);
     htuvalues.state = error;
   }
   else 
   {
-    //strcpy (text_to_write_oled, "Sensor ok");
-    //printoled(text_to_write_oled, 10, 40);
-    //delay(DISPLAY_TIME);
-    //clearOled();
     htuvalues.state = ok;
   }
 }
