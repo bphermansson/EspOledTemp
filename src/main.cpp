@@ -5,27 +5,25 @@
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"  // https://github.com/me-no-dev/ESPAsyncWebServer
 #include <Wire.h>
-#include "Adafruit_HTU21DF.h"
 #include <SPI.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 #include <MQTT.h>
 #include "connect.h"
-#include "printOnOled.h"
+#include <print_on_oled.h>
 #include "TimeShowFormatted.h"
 #include "createJson.h"
 #include "ota.h"
 #include "FS.h"
 #include <ntp.h>
-
-#define dispTime 1000
+#include "LittleFS.h"
+#include "htu21d.h"
 
 MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
 
 String date = "----";
-float temp,hum;
 time_t now;
 int counter;
 int oldcounter = 15000;
@@ -41,11 +39,7 @@ char text_to_write_oled[55];
 String tempTopic, htmldata, jsondata, myip;
 char totTime[20];
 char realDate[20];
-char ctemp[8];
-char chum[5];
 
-// Declare devices
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 void notFound(AsyncWebServerRequest *request) {
     request->send(404, "text/plain", "Not found");
@@ -54,21 +48,23 @@ void notFound(AsyncWebServerRequest *request) {
 void setup() {
   Serial.begin(115200);
   delay(1000);
-  Serial.printf("Welcome to %s!", APPNAME);
-  
+  Serial.print(F("Welcome to "));
+  Serial.println(APPNAME); 
+
   initOled();
-  char tmp[] = {APPNAME};
-  strcpy(text_to_write_oled, tmp);
+  //char tmp[] = {APPNAME};
+  //strcpy(text_to_write_oled, tmp);
+  strcpy(text_to_write_oled, APPNAME);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
-  const char ssid[] = MYSSID;
+  //const char ssid[] = MYSSID;
   strcpy (text_to_write_oled, "Connect to ");
-  strcat (text_to_write_oled, ssid);
+  strcat (text_to_write_oled, MYSSID);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   // Connect to WiFi
@@ -81,28 +77,18 @@ void setup() {
 
   printoled("IP: ", 10, 20); 
   printoled(__myip, 10, 40);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();    
 
-  SPIFFS.begin();                           // Start the SPI Flash Files System
+  if(!LittleFS.begin()){
+    Serial.println("An Error has occurred while mounting LittleFS");
+    return;
+  }
 
   // Set time  
   //setup_NTP();
-  // Init sensor
-  if (!htu.begin()) 
-  {  
-    strcpy (text_to_write_oled, "Sensor error");
-    Serial.println(text_to_write_oled);
-    printoled(text_to_write_oled, 10, 40);
-    while (1){};
-  }
-  else 
-  {
-    strcpy (text_to_write_oled, "Sensor ok");
-    printoled(text_to_write_oled, 10, 40);
-    delay(dispTime);
-    clearOled();
-  }
+
+
 
   client.begin(MQTT_SERVER, net);
   client.setWill(MQTT_PUB_TOPIC, "Bye!");
@@ -110,7 +96,7 @@ void setup() {
   strcpy (text_to_write_oled, "Connect to MQTT server");
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   int connAttempts = 0;
@@ -121,7 +107,7 @@ void setup() {
       Serial.print("MQTT connection error, check your settings.");
       strcpy (text_to_write_oled, "MQTT connection error");
       printoled(text_to_write_oled, 10, 20);
-      delay(dispTime);
+      delay(DISPLAY_TIME);
       clearOled();
 
       while(connAttempts > 10) {
@@ -132,16 +118,16 @@ void setup() {
   }
 
   strcpy (text_to_write_oled, "Connected! ");
-  strcat (text_to_write_oled, ssid);
+  strcat (text_to_write_oled, MYSSID);
   Serial.println(text_to_write_oled);
   printoled(text_to_write_oled, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   Serial.print("Publishing to: ");
   Serial.println(MQTT_PUB_TOPIC);
   printoled(MQTT_PUB_TOPIC, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 
   if (!client.connected()) {
@@ -155,13 +141,13 @@ void setup() {
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/index.html", String(), false);
+    request->send(LittleFS, "/index.html", String(), false);
   });
   server.on("/json.html", HTTP_GET, [](AsyncWebServerRequest *request){
   });
   // Route to load style.css file
   server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(SPIFFS, "/style.css", "text/css");
+    request->send(LittleFS, "/style.css", "text/css");
   });
   server.on("/readdata", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", jsondata);
@@ -175,7 +161,7 @@ void setup() {
   strcpy(smess, "Setup done");
   Serial.println(smess);
   printoled(smess, 10, 20);
-  delay(dispTime);
+  delay(DISPLAY_TIME);
   clearOled();
 }
 
@@ -214,41 +200,6 @@ void loop() {
       tempTopic = topic + "/time";
       client.publish(tempTopic, totTime);
 
-      // Temp & humidity
-      if (sensorPres) {
-        temp=htu.readTemperature();
-        String stemp = String(temp);  // Dummy to easily measure variable length
-        dtostrf(temp, stemp.length()-1, 1, ctemp);
-        strcat(ctemp, "C");
-        printoled(ctemp, 10, 15);
-
-        hum=htu.readHumidity();
-        dtostrf(hum, 2, 0, chum);
-        strcat(chum, "%");
-        printoled(chum, 80, 15);
-
-        Serial.print("Temp: ");
-        Serial.println(ctemp);
-        Serial.print("Humidity: ");
-        Serial.println(chum);
-/*
-        u8g2.setFont(u8g2_font_crox3h_tr);
-        u8g2.drawStr( 20, 60, ctemp);
-        u8g2.drawStr( 74, 60, chum);
-        u8g2.sendBuffer();
-*/
-        tempTopic = topic + "/temp";
-        client.publish(tempTopic, ctemp);
-        tempTopic = topic + "/humidity";
-        client.publish(tempTopic, chum);
-      }
-      else {
-        String err =  "No temp/humidity sensor attached";
-        Serial.println(err);
-        tempTopic = topic + "/err";
-        client.publish(tempTopic, err);
-      }
-
       long int timenow = millis();
       Serial.print("Uptime: ");
       Serial.println(timenow);
@@ -263,7 +214,7 @@ void loop() {
       tempTopic = topic + "/ip";
       client.publish(tempTopic, myip);
 
-      jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow,formTime,myip);
+      //jsondata = createJson(appname,totTime,realDate,ctemp,chum,timenow,formTime,myip);
       Serial.print ("jsondata: ");
       Serial.println (jsondata);
 
