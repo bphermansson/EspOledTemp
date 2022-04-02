@@ -2,10 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"name": "SoundDetector",
-			"path": "../../../nasFiler/Programmering/platformio/SoundDetector"
 		}
 	],
 	"settings": {

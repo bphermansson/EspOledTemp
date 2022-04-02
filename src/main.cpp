@@ -19,6 +19,8 @@
 #include "LittleFS.h"
 #include "htu21d.h"
 
+#define DISPLAY_TIME 3000
+
 MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
