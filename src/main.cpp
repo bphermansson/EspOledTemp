@@ -23,6 +23,8 @@ MQTTClient client;
 WiFiClient net;
 AsyncWebServer server(80);
 
+#define DISPLAY_TIME 3000
+
 String date = "----";
 float temp,hum;
 time_t now;
@@ -59,6 +61,11 @@ void setup() {
   char tmp[] = {APPNAME};
   strcpy(text_to_write_oled, tmp);
   printoled(text_to_write_oled, 10, 20);
+
+  strcpy(text_to_write_oled, "A long long test text to test with");
+  printoled(text_to_write_oled, 10, 20);
+
+
   delay(DISPLAY_TIME);
   clearOled();
 
