@@ -15,21 +15,21 @@ String connectWifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, pass);
 
-  int connAttempts = 0;
+  uint8_t connAttempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.printf(". %i \n", connAttempts);
+    Serial.printf(". %d \n", connAttempts);
     connAttempts++;
-    if (connAttempts>15) {
+    if (connAttempts>23) {
       Serial.println("WiFi connection error, check your settings.");    
       Serial.println((String)"In settings ssid="+ssid+" and pass="+pass);      
-      printoled("Wifi connection error", 10, 20);
-
-      while(connAttempts > 15) {
-        yield();
-      }
+      //printoled("Wifi connection error", 10, 20);     
+     // while(connAttempts > 25) {
+     //   yield();
+     // }
     }
-    delay(1000);
+    delay(2000);
   }
+  delay(3000);
   String conIP = WiFi.localIP().toString();
   return conIP;
 }

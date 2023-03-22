@@ -9,6 +9,7 @@
 #include <print_on_oled.h>
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+#define LENGTH 300
 
 //#define BUFFERLEN 20
 int totlen=0, pos=0, wordnr=1;
@@ -41,7 +42,7 @@ void initOled()
   u8g2_uint_t dh = u8g2.getDisplayHeight();
   u8g2_uint_t dw = u8g2.getDisplayWidth();
   Serial.printf("Oled size: %d x %d\n", dw, dh);
-  u8g2.drawStr(0,10,"Hello World!!!");	// write something to the internal memory
+  u8g2.drawStr(0,10,"Hello World!");	// write something to the internal memory
   u8g2.sendBuffer();
   /*
   int cursX = u8g2.tx;
@@ -56,105 +57,53 @@ void clearOled()
   u8g2.clearBuffer();
 }
 
-/*
 void printoled(char text_to_write_oled[], int x, int y)
 {
-  Serial.begin(115200);
-  Serial.println("Will soon print to oled: ");
-  Serial.println(text_to_write_oled);
+    Serial.begin(115200);
+    Serial.println("Will soon print to oled: ");
+    Serial.println(text_to_write_oled);
 
-  char *token, *str, *tofree;
-  tofree = str = strdup(text_to_write_oled);  // We own str's memory now.
-  while ((token = strsep(&str, " "))) my_fn(token, x, y);
+    char oldbuf[10][300];
+    char whole_text[20][20];
+    int line_counter=0;
+    char *pch; 
+    char buf[LENGTH];
+    memset(buf, 0, LENGTH);
+    memset(oldbuf, 0, LENGTH);
 
-  // Clean up and reset.
-  //free(tofree);
-  free(str);
-  totlen=0;
-  pos=0;   
-  wordnr=1;
-}
-*/
-void printoled(char text_to_write_oled[], int x, int y)
-{
-  Serial.begin(115200);
-  Serial.println("Will soon print to oled: ");
-  Serial.println(text_to_write_oled);
+    //strcpy (text_txt, "This is, a - test with a much longer text. It has more letters, more spaces, more of everything. But still is totally meaningless. ");
+  
+    pch = strtok (text_to_write_oled, " ,.-");    // Split text. 
+    strcpy(buf,pch);                    // Store first part.
+    strcpy(whole_text[line_counter], buf);  // Save first item
+    strcat(whole_text[line_counter], " ");
+    strcpy(oldbuf[line_counter], buf);      // Save old buffer
 
-  if(strlen(text_to_write_oled) > 15) 
-  {
-
-      //char *token = text_to_write_oled;
-      //char txt[400];
-    //  token = strtok(text_to_write_oled, " ");
-    //  strcpy(txt,token);
-    //  strcpy(txt,token);
-
-      char *pch;
-      //char *wholeLine;
-      
-      int length = 100;
-      //char *posts_array = (char*)malloc(length * sizeof(char));
-      //char *ptr = (char*)malloc(length * sizeof(char));
-      
-      char buf[300];
-      char arr_buf[5][300];
-      uint8_t arr_row=0;
-      
-      printf ("Splitting string \"%s\" into tokens:\n",text_to_write_oled);
-      pch = strtok (text_to_write_oled, " ,.-");
-      strcpy(arr_buf[arr_row],pch);
-      printf ("First part: %s\n",arr_buf[arr_row]);
-
-      uint8_t buflen = 0;
-      
-      while (pch != NULL)
-      {
-        pch = strtok (NULL, " ,.-");
+    while (pch != NULL)
+    {
+        pch = strtok (NULL, " ,-");
         if(pch != NULL) 
         {
-          printf ("%d - %s\n", strlen(buf), pch);
-          char *T = pch;
-          //strcat(buf,T);
-          strcat(arr_buf[arr_row],T);
-          if (strlen(arr_buf[arr_row]) > 15)
-          {
-            arr_row++;
-          }
+            char *T = pch;
+            strcat(buf,T);                         // Add next word  
+            strcat(whole_text[line_counter], T);
+            strcat(whole_text[line_counter], " ");
+
+            if (strlen(whole_text[line_counter]) >= 15)   // Oops, got to long, go to next line.
+            {
+              //  printf ("%s - %lu\n", whole_text[line_counter], strlen(whole_text[line_counter]));
+                //strcpy(whole_text[line_counter],oldbuf[line_counter]);  // Get back previous line
+                line_counter++;
+            }
+            //strcat(buf,T);
+            strcat(oldbuf[line_counter], T);
         }
-      }
-      printf ("All the bits: %s\n",arr_buf[0]);
-      printf ("All the bits: %s\n",arr_buf[1]);
-
-      //printf ("buf: %s\n",buf);
-
-
-
-
-      //printf( " %s\n", token ); 
-      /*
-      while( token != NULL ) {
-        printf( " %s\n", token );  
-        token = strtok(NULL, " ");
-        strcpy(txt, token);
-      }
-      */
-    /*
-    while (txt = strtok(text_to_write_oled, " "))
-    {
-      printf( " %s\n", txt );
+        if(pch == NULL)
+        {
+            printf ("%s - %lu\n", whole_text[line_counter], strlen(whole_text[line_counter]));   // The last word
+        }
     }
-    */
 
-  }
+    memset(oldbuf, 0, LENGTH);
 
-/*
-  char *token = strtok(text_to_write_oled, " ");
-  while( token != NULL ) {
-    printf( " %s\n", token ); //printing each token
-    token = strtok(NULL, " ");
- //   strcpy(*txt, token);
-  }
-      //printf( "txt: %s\n", txt );
-*/
 }

@@ -1,26 +1,30 @@
 
 #include <Arduino.h>
 #include "settings.h"
+#include "main.h"
 //#include "printOnOled.h"
 #include <ESP8266WiFi.h>
 #include "ESPAsyncWebServer.h"  // https://github.com/me-no-dev/ESPAsyncWebServer
 #include <Wire.h>
 #include "Adafruit_HTU21DF.h"
-#include <SPI.h>
-#include <ArduinoJson.h>
-#include <ArduinoOTA.h>
-#include <MQTT.h>
-#include "connect.h"
-#include <print_on_oled.h>
-#include "TimeShowFormatted.h"
-#include "createJson.h"
 #include "ota.h"
 #include "FS.h"
 #include <ntp.h>
 #include "LittleFS.h"
+#include <SPI.h>
+#include <ArduinoJson.h>
+
+#include <ArduinoOTA.h>
+#include <MQTT.h>
+//#include "connect.h"
+#include <print_on_oled.h>
+#include "TimeShowFormatted.h"
+#include "createJson.h"
+#include "wifi.h"
+
 
 MQTTClient client;
-WiFiClient net;
+WiFiClient wifiClient;
 AsyncWebServer server(80);
 
 #define DISPLAY_TIME 3000
@@ -78,15 +82,17 @@ void setup() {
   clearOled();
 
   // Connect to WiFi
-  myip = connectWifi();
+ // myip = connectWifi();
+  *ipAddrPtr=0;
+  wifi_connect(ipAddrPtr);
 
   // Print IP address to Oled & Serial
-  char __myip[sizeof(myip)];
-  myip.toCharArray(__myip, 20);
-  Serial.printf("Connected to Wifi with IP %s\n", __myip);
+//  char __myip[sizeof(myip)];
+//  myip.toCharArray(__myip, 20);
+//  Serial.printf("Connected to Wifi with IP %s\n", __myip);
 
-  printoled("IP: ", 10, 20); 
-  printoled(__myip, 10, 40);
+  //printoled("IP: ", 10, 20); 
+  //printoled(__myip, 10, 40);
   delay(DISPLAY_TIME);
   clearOled();    
 
@@ -102,9 +108,10 @@ void setup() {
   if (!htu.begin()) 
   {  
     strcpy (text_to_write_oled, "Sensor error");
+    sensorPres=false;
     Serial.println(text_to_write_oled);
     printoled(text_to_write_oled, 10, 40);
-    while (1){};
+    yield();
   }
   else 
   {
@@ -114,7 +121,7 @@ void setup() {
     clearOled();
   }
 
-  client.begin(MQTT_SERVER, net);
+  client.begin(MQTT_SERVER, wifiClient);
   client.setWill(MQTT_PUB_TOPIC, "Bye!");
 
   strcpy (text_to_write_oled, "Connect to MQTT server");
@@ -228,7 +235,7 @@ void loop() {
       if (sensorPres) {
         temp=htu.readTemperature();
         String stemp = String(temp);  // Dummy to easily measure variable length
-        dtostrf(temp, stemp.length()-1, 1, ctemp);
+        dtostrf(temp, stemp.length()-1, 1, ctemp);  //"turn your floats into strings"
         strcat(ctemp, "C");
         printoled(ctemp, 10, 15);
 
